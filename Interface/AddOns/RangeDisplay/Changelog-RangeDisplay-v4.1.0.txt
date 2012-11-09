@@ -1,0 +1,40 @@
+------------------------------------------------------------------------
+r344 | mitch0 | 2012-09-17 07:42:47 +0000 (Mon, 17 Sep 2012) | 3 lines
+Changed paths:
+   A /tags/v4.1.0 (from /trunk:343)
+
+Tagging as v4.1.0
+ - enable arena frames
+ - fix initial frame placement on load
+------------------------------------------------------------------------
+r343 | mitch0 | 2012-09-01 12:08:21 +0000 (Sat, 01 Sep 2012) | 1 line
+Changed paths:
+   M /trunk/RangeDisplay.lua
+
+enable arena frames support
+------------------------------------------------------------------------
+r341 | mitch0 | 2012-08-28 07:33:36 +0000 (Tue, 28 Aug 2012) | 1 line
+Changed paths:
+   M /trunk/RangeDisplay.toc
+   M /trunk/RangeDisplay_Options/RangeDisplay_Options.toc
+
+toc bump for teh pandas
+------------------------------------------------------------------------
+r340 | mitch0 | 2012-08-22 06:01:55 +0000 (Wed, 22 Aug 2012) | 1 line
+Changed paths:
+   M /trunk/RangeDisplay.lua
+
+revert the border fix revert
+------------------------------------------------------------------------
+r339 | mitch0 | 2012-08-21 22:12:26 +0000 (Tue, 21 Aug 2012) | 1 line
+Changed paths:
+   M /trunk/RangeDisplay.lua
+
+pick up latest LibRangeCheck-2.0
+------------------------------------------------------------------------
+r338 | mitch0 | 2012-07-09 12:29:33 +0000 (Mon, 09 Jul 2012) | 1 line
+Changed paths:
+   M /trunk/RangeDisplay.lua
+
+remove the green thing hack, fixed in LSM
+------------------------------------------------------------------------
