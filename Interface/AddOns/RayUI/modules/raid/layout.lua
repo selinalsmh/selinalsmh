@@ -216,7 +216,8 @@ local function PostHealth(hp, unit)
 				hp:SetStatusBarColor(0.5, 0.5, 0.5, 1)
 				hp.bg:SetVertexColor(0.5, 0.5, 0.5, 1)
 			else
-				hp.bg:SetVertexColor(0.12, 0.12, 0.12, 1)
+				-- hp.bg:SetVertexColor(0.12, 0.12, 0.12, 1)
+				hp.bg:SetVertexColor(r*.25, g*.25, b*.25, 1)
 			end
 		end
 	end
@@ -333,6 +334,138 @@ local function OnLeave(self)
     end
 end
 
+
+local counterOffsets = {
+	["TOPLEFT"] = {9, 0},
+	["TOPRIGHT"] = {-7, 0},
+	["BOTTOMLEFT"] = {9, 0},
+	["BOTTOMRIGHT"] = {-7, 0},
+	["LEFT"] = {9, 0},
+	["RIGHT"] = {-7, 0},
+	["TOP"] = {0, 0},
+	["BOTTOM"] = {0, 0},
+}
+
+function UpdateAuraWatch(frame)
+	local buffs = {}
+	local auras = frame.AuraWatch
+    auras:Show()
+	
+	if not R.global["Raid"].AuraWatch[R.myclass] then R.global["Raid"].AuraWatch[R.myclass] = {} end
+	
+	if frame.unit == "pet" and R.global["Raid"].AuraWatch.PET then
+		for _, value in pairs(R.global["Raid"].AuraWatch.PET) do
+			tinsert(buffs, value)
+		end	
+	else
+		for _, value in pairs(R.global["Raid"].AuraWatch[R.myclass]) do
+			tinsert(buffs, value)
+		end	
+	end
+
+	if auras.icons then
+		for spell in pairs(auras.icons) do
+			local matchFound = false
+			for _, spell2 in pairs(buffs) do
+				if spell2["id"] then
+					if spell2["id"] == spell then
+						matchFound = true
+					end
+				end
+			end
+			
+			if not matchFound then
+				auras.icons[spell]:Hide()
+				auras.icons[spell] = nil
+			end
+		end
+	end
+	
+	for _, spell in pairs(buffs) do
+		local icon
+		if spell["id"] then
+			local name, _, image = GetSpellInfo(spell["id"])
+			if name then
+				if not auras.icons[spell.id] then
+					icon = CreateFrame("Frame", nil, auras)
+				else
+					icon = auras.icons[spell.id]
+				end
+				icon.name = name
+				icon.image = image
+				icon.spellID = spell["id"]
+				icon.anyUnit = spell["anyUnit"]
+				icon.onlyShowMissing = spell["onlyShowMissing"]
+				if spell["onlyShowMissing"] then
+					icon.presentAlpha = 0
+					icon.missingAlpha = 1
+				else
+					icon.presentAlpha = 1
+					icon.missingAlpha = 0
+				end		
+				icon:Width(RA.db.indicatorsize)
+				icon:Height(RA.db.indicatorsize)
+				icon:ClearAllPoints()
+				icon:SetPoint(spell["point"], 0, 0);
+
+				if not icon.icon then
+					icon.icon = icon:CreateTexture(nil, "BORDER");
+					icon.icon:SetAllPoints(icon);
+				end
+				
+                icon.icon:SetTexture(R["media"].blank);
+
+                if (spell["color"]) then
+                    icon.icon:SetVertexColor(spell["color"].r, spell["color"].g, spell["color"].b);
+                else
+                    icon.icon:SetVertexColor(0.8, 0.8, 0.8);
+                end			
+				
+				if not icon.cd then
+					icon.cd = CreateFrame("Cooldown", nil, icon)
+					icon.cd:SetAllPoints(icon)
+					icon.cd:SetReverse(true)
+					icon.cd:SetFrameLevel(icon:GetFrameLevel())
+				end
+				
+				if not icon.border then
+					icon.border = icon:CreateTexture(nil, "BACKGROUND")
+					icon.border:SetOutside(icon, 1, 1)
+					icon.border:SetTexture(R["media"].blank)
+					icon.border:SetVertexColor(0, 0, 0)
+				end
+				
+				if not icon.count then
+					icon.count = icon:CreateFontString(nil, "OVERLAY")
+					icon.count:Point("CENTER", unpack(counterOffsets[spell["point"]]))
+				end
+                icon.count:SetFont(R["media"].font, RA.db.indicatorsize + 4, "THINOUTLINE")
+                --icon.count:SetFont(R["media"].pxfont, R.mult*10, "OUTLINE,MONOCHROME")
+				
+				if spell["enabled"] then
+					auras.icons[spell.id] = icon
+					if auras.watched then
+						auras.watched[spell.id] = icon
+					end
+				else	
+					auras.icons[spell.id] = nil
+					if auras.watched then
+						auras.watched[spell.id] = nil
+					end
+					icon:Hide()
+					icon = nil
+				end
+			end
+		end
+	end
+	
+	if frame.AuraWatch.Update then
+		frame.AuraWatch.Update(frame)
+	end
+		
+	buffs = nil
+end
+
 local function style(self)
     self.menu = menu
 
@@ -427,6 +560,7 @@ local function style(self)
     local ricon = self.Health:CreateTexture(nil, "OVERLAY")
     ricon:SetPoint("TOP", self, 0, 5)
     ricon:SetSize(RA.db.leadersize+2, RA.db.leadersize+2)
+	ricon:SetTexture("Interface\\AddOns\\RayUI\\media\\raidicons.blp")
     self.RaidIcon = ricon
 
     -- Leader Icon
@@ -483,6 +617,16 @@ local function style(self)
     auras:SetPoint("CENTER", self.Health)
     auras.size = RA.db.aurasize
     self.freebAuras = auras
+
+    local auraWatch = CreateFrame("Frame", nil, self)
+    auraWatch:SetFrameLevel(self:GetFrameLevel() + 25)
+    auraWatch:SetInside(self.Health)
+    auraWatch.presentAlpha = 1
+    auraWatch.missingAlpha = 0
+    auraWatch.strictMatching = true
+    auraWatch.icons = {}
+    self.AuraWatch = auraWatch
+    UpdateAuraWatch(self)
 
     -- Add events
     self:RegisterEvent("PLAYER_FOCUS_CHANGED", FocusTarget)
@@ -584,8 +728,7 @@ function RA:SpawnHeader(name, group, layout)
 	local visibility = "custom [@raid16,noexists] hide;show"
 
 	if layout == 15 then
-		width = width * 1.3
-		height = height * 1.3
+		width, height = RA.db.bigwidth, RA.db.bigheight
 		visibility = "custom [@raid16,exists] hide;show"
 	end
 
@@ -636,9 +779,14 @@ function RA:SpawnHeader(name, group, layout)
     "columnSpacing", RA.db.spacing,
     "columnAnchorPoint", growth)
 
-    RegisterAttributeDriver(header, "state-visibility", "show")	
-    header:SetAttribute("minHeight", R:Scale(height)*5 + R:Scale(RA.db.spacing)*4)
-    header:SetAttribute("minWidth", R:Scale(width))
+    RegisterAttributeDriver(header, "state-visibility", "show")
+	if RA.db.horizontal then
+		header:SetAttribute("minHeight", R:Scale(height))
+		header:SetAttribute("minWidth", R:Scale(width)*5 + R:Scale(RA.db.spacing)*4)
+	else
+		header:SetAttribute("minHeight", R:Scale(height)*5 + R:Scale(RA.db.spacing)*4)
+		header:SetAttribute("minWidth", R:Scale(width))
+	end
     RegisterAttributeDriver(header, "state-visibility", "hide")	
 
 	header:RegisterEvent("PLAYER_ENTERING_WORLD")

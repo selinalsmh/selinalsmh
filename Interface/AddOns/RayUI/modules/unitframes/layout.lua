@@ -254,9 +254,9 @@ function UF:DPSLayout(frame, unit)
 		reputation:SetFrameLevel(1)
 
 		reputation.PostUpdate = function(frame, event, unit, bar)
-															local name, id = GetWatchedFactionInfo()
-															bar:SetStatusBarColor(FACTION_BAR_COLORS[id].r, FACTION_BAR_COLORS[id].g, FACTION_BAR_COLORS[id].b)
-														end
+            local name, id = GetWatchedFactionInfo()
+            bar:SetStatusBarColor(FACTION_BAR_COLORS[id].r, FACTION_BAR_COLORS[id].g, FACTION_BAR_COLORS[id].b)
+        end
 		reputation.Tooltip = true
 		reputation.colorStanding = true
 
@@ -325,6 +325,12 @@ function UF:DPSLayout(frame, unit)
 		frame.Resting = Resting
 		frame.Resting:SetTexture("Interface\\AddOns\\RayUI\\media\\rested")
 		frame.Resting:SetVertexColor(0.8, 0.8, 0.8)
+
+		if UF.db.aurabar then
+            frame.AuraBars = self:Construct_AuraBarHeader(frame)
+            frame.AuraBars:SetPoint("BOTTOMLEFT", frame, "TOPLEFT", 0, 33)
+            frame.AuraBars:SetPoint("BOTTOMRIGHT", frame, "TOPRIGHT", 0, 33)
+        end
 	end
 
 	if unit == "target" then
@@ -469,6 +475,12 @@ function UF:DPSLayout(frame, unit)
 				if frame.otherBar:GetValue() == 0 then frame.otherBar:SetAlpha(0) else frame.otherBar:SetAlpha(1) end
 			end
 		}
+
+		if UF.db.aurabar then
+            frame.AuraBars = self:Construct_AuraBarHeader(frame)
+            frame.AuraBars:SetPoint("BOTTOMLEFT", frame, "TOPLEFT", 0, 33)
+            frame.AuraBars:SetPoint("BOTTOMRIGHT", frame, "TOPRIGHT", 0, 33)
+        end
 	end
 
 	if unit == "party" or unit == "focus" then
@@ -766,7 +778,8 @@ function UF:DPSLayout(frame, unit)
 
     local ricon = frame:CreateTexture(nil, "OVERLAY")
     ricon:Point("BOTTOM", frame, "TOP", 0, -7)
-    ricon:SetSize(16,16)
+    ricon:SetSize(24, 24)
+	ricon:SetTexture("Interface\\AddOns\\RayUI\\media\\raidicons.blp")
     frame.RaidIcon = ricon
 
 	frame.mouseovers = {}

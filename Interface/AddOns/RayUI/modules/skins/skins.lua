@@ -126,6 +126,32 @@ function S:GetOptions()
 				},
 			},
 		},
+		nugrunninggroup = {
+			order = 11,
+			type = "group",
+			name = "NugRunning",
+			guiInline = true,
+			args = {
+				nugrunning = {
+					order = 1,
+					name = L["启用"],
+					type = "toggle",
+				},
+			},
+		},
+		mogitgroup = {
+			order = 12,
+			type = "group",
+			name = "MogIt",
+			guiInline = true,
+			args = {
+				mogit = {
+					order = 1,
+					name = L["启用"],
+					type = "toggle",
+				},
+			},
+		},
 	}
 	return options
 end

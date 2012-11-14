@@ -2,6 +2,8 @@ local R, L, P = unpack(select(2, ...)) --Inport: Engine, Locales, ProfileDB
 local S = R:GetModule("Skins")
 
 local function LoadSkin()
+    local autoLootTable = {}
+
 	if not(IsAddOnLoaded("Butsu") or IsAddOnLoaded("LovelyLoot") or IsAddOnLoaded("XLoot")) then
 		local slotsize = 36
 		lootSlots = {}
@@ -9,9 +11,11 @@ local function LoadSkin()
 		anchorframe:SetSize(200, 15)
 		anchorframe:SetPoint("TOPLEFT", 300, -300)
 
-		local function OnClick(self)
+		local function OnClick(self, button)
 			if IsModifiedClick() then
-				HandleModifiedItemClick(GetLootSlotLink(self.id))
+                if button == "LeftButton" then
+                    HandleModifiedItemClick(GetLootSlotLink(self.id))
+                end
 			else
 				StaticPopup_Hide("CONFIRM_LOOT_DISTRIBUTION")
 				LootFrame.selectedSlot = self.id
@@ -64,6 +68,7 @@ local function LoadSkin()
 			slot.quest:SetInside(slot)
 			slot.quest:SetTexCoord(.08, .92, .08, .92)
 			slot.quest:Hide()
+			slot:RegisterForClicks("LeftButtonUp", "RightButtonUp")
 			slot:SetScript("OnClick", OnClick)
 			slot:SetScript("OnEnter", OnEnter)
 			slot:SetScript("OnLeave", OnLeave)
@@ -147,6 +152,15 @@ local function LoadSkin()
 				if numLootItems > 0 then
 					for i = 1, numLootItems do
 						UpdateLootSlot(self, i)
+                        if not R:TableIsEmpty(autoLootTable) then
+                            if GetLootSlotType(i) == 2 then
+                                LootSlot(i)
+                            else
+                                if autoLootTable[select(2, GetLootSlotInfo(i))] then
+                                    LootSlot(i)
+                                end
+                            end
+                        end
 					end
 				else
 					CloseLoot()
@@ -262,6 +276,18 @@ local function LoadSkin()
 			loot.announce[i]:SetBackdropColor(unpack(chncolor[chn[i]]))
 			loot.announce[i]:StyleButton(1)
 		end
+
+        SlashCmdList.AUTOLOOT = function(msg)
+            if msg then
+                if msg == "reset" then
+                    wipe(autoLootTable)
+                else
+                    autoLootTable[msg] = true
+                end
+            end
+        end
+        SLASH_AUTOLOOT1 = "/autoloot"
+
 	end
 	
 	-- Missing loot frame

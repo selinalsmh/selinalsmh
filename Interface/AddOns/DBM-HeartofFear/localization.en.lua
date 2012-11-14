@@ -5,11 +5,6 @@ local L
 ------------
 L= DBM:GetModLocalization(745)
 
-L:SetWarningLocalization({
-	specwarnPlatform	= "Platform change",
-	MindControlIcon		= DBM_CORE_AUTO_ICONS_OPTION_TEXT:format(122740)
-})
-
 L:SetOptionLocalization({
 	specwarnPlatform	= "Show special warning when boss changes platforms",
 	specwarnExhale		= "Show special warning for $spell:122761",
@@ -63,20 +58,26 @@ L:SetWarningLocalization({
 -------------------------------
 L= DBM:GetModLocalization(713)
 
+L:SetWarningLocalization({
+	specwarnUnder	= "Move out of purple ring!",
+	specWarnPungencyOtherFix 		= "%s - (%d)"
+})
+
 L:SetOptionLocalization({
+	specwarnUnder	= "Show special warning when you are under boss",
 	PheromonesIcon	= DBM_CORE_AUTO_ICONS_OPTION_TEXT:format(122835),
 	InfoFrame			= "InfoFrame:$spell:123081",
 	optTankMode			= "Special warning:how to change tank",
 	two					= "2 tanks (30 stacks)",
 	three				= "3 tanks (20 stacks)",
 	SoundWOP			= "Voice warning: important skills",
-	SpecWarnPungencyOther = "Special warning: $spell:123081",
+	specWarnPungencyOtherFix = "Special warning: $spell:123081",
 	HudMAP				= "HUDMAP: $spell:122835",
 	SoundFS				= "Countdown: $spell:122735"
 })
 
-L:SetWarningLocalization({
-	SpecWarnPungencyOther 		= "%s - (%d)"
+L:SetMiscLocalization({
+	UnderHim	= "under him"
 })
 
 ----------------------
@@ -87,10 +88,15 @@ L= DBM:GetModLocalization(741)
 L:SetOptionLocalization({
 	SoundWOP			= "voice warning: important skills",
 	SoundDQ				= "voice warning: $spell:122149 disperse",
+	SoundJR				= "voice warning: Help others",
 	APArrow				= "DBM arrow: $spell:121881",
 	NearAP				= "voice warning: only warn within 20 yards of $spell:121881",
 	ReapetAP			= "special warning: if your $spell:121881 without breaking in 5 seconds then keeping yell",
 	HudMAP				= "HUDMAP:$spell:121885",
+	optHud				= "HUDMAP:Windbomb",
+	auto				= "auto",
+	always				= "always",
+	none				= "none",
 	RangeFrame			= "RangeFrame(3):$spell:121881",
 	AmberPrisonIcons	= DBM_CORE_AUTO_ICONS_OPTION_TEXT:format(121885)
 })
@@ -106,24 +112,30 @@ L:SetMiscLocalization({
 L= DBM:GetModLocalization(737)
 
 L:SetWarningLocalization({
-	warnAmberExplosion			= "%s is casting %s",
+	warnReshapeLifeTutor		= "1: Interrupt/debuff target, 2: Interrupt yourself, 3: Regen Health/Willpower, 4: Escape Vehicle",
+	warnAmberExplosion			= ">%s< is casting %s",
 	warnInterruptsAvailable		= "Interupts available for %s: %s",
 	specwarnWillPower			= "Low Will Power!",
-	specwarnAmberExplosionYou	= "Interrupt YOUR %s!"--Struggle for Control interrupt.
+	specwarnAmberExplosionYou	= "Interrupt YOUR %s!",--Struggle for Control interrupt.
+	specwarnAmberExplosionAM	= "%s: Interrupt %s!",--Amber Montrosity
+	specwarnAmberExplosionOther	= "%s: Interrupt %s!"--Amber Montrosity
 })
 
 L:SetTimerLocalization{
-	timerAmberExplosionAMCD		= "Next %s: %s"
+	timerAmberExplosionAMCD		= "%s CD: %s"
 }
 
 L:SetOptionLocalization({
 	SoundWOP			= "voice warning: important skills",
+	warnReshapeLifeTutor		= "Display ability purpose rundown of Mutated Construct abilities",
 	warnAmberExplosion			= "Show warning (with source) when $spell:122398 is cast",
 	warnInterruptsAvailable		= "Announce who has Amber Strike interrupts available for $spell:122402",
 	specwarnWillPower			= "Show special warning when will power is low in construct",
 	specwarnAmberExplosionYou	= "Show special warning to interrupt your own $spell:122398",
+	specwarnAmberExplosionAM	= "Show special warning to interrupt Amber Montrosity's $spell:122402",
+	specwarnAmberExplosionOther	= "Show special warning to interrupt loose Mutated Construct's $spell:122398",
 	timerAmberExplosionAMCD		= "Show timer for Amber Monstrosity's next $spell:122402",
-	InfoFrame					= "Show info frame for players will power (WIP)"
+	InfoFrame					= "Show info frame for players will power"
 })
 
 L:SetMiscLocalization({
@@ -140,8 +152,11 @@ L:SetOptionLocalization({
 	RangeFrame		= "Show range frame (5) for $spell:123735",
 	SoundWOP		= "voice warning: important skills",
 	HudMAP			= "HUDMAP: $spell:124863",
+	HudMAP2			= "HUDMAP: $spell:124821",
+	StickyResinIcons	= DBM_CORE_AUTO_ICONS_OPTION_TEXT:format(124097)
 })
 
 L:SetMiscLocalization({
-	PlayerDebuffs	= "Fixated"
+	PlayerDebuffs		= "Fixated",
+	YellPhase3			= "No more excuses, Empress! Eliminate these cretins or I will kill you myself!"
 })

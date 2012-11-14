@@ -72,6 +72,8 @@ P["CooldownFlash"]={
 	enable = true,
 }
 
+G["UnitFrames"]={}
+
 P["UnitFrames"]={
 	powerColorClass = true,
 	healthColorClass = false,
@@ -82,13 +84,18 @@ P["UnitFrames"]={
 	showArenaFrames = true,
 	separateEnergy = false,
 	vengeance = true,
+	aurabar = false,
 }
+
+G["Raid"] = {}
 
 P["Raid"]={
 	enable = true,
     width = 65,
-    height = 30,
-    spacing = 8,
+    height = 33,
+	bigwidth = 85,
+	bigheight = 43,
+    spacing = 5,
     showwhensolo = false,
     showplayerinparty = true,
     horizontal = false,
@@ -101,10 +108,10 @@ P["Raid"]={
     healoverflow = true,
     healothersonly = false,
     roleicon = true,    
-    indicatorsize = 5,
+    indicatorsize = 7,
     symbolsize = 11,
     leadersize = 12,
-    aurasize = 12,
+    aurasize = 18,
     deficit = false, --缺失生命
     perc = true, --百分比
     actual = false, --当前生命
@@ -127,13 +134,13 @@ P["ActionBar"]={
 	hotkeys = true,
 	showgrid = true,
 
-	bar1fade = true,
+	bar1fade = false,
 
 	bar2mouseover = false,
-	bar2fade = true,
+	bar2fade = false,
 
 	bar3mouseover = false,
-	bar3fade = true,
+	bar3fade = false,
 
 	bar4mouseover = false,
 	bar4fade = false,

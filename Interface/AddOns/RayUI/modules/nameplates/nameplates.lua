@@ -432,6 +432,9 @@ local function Colorize(frame)
 
 	for class, color in pairs(RAID_CLASS_COLORS) do
 		local r, g, b = floor(r*100+.5)/100, floor(g*100+.5)/100, floor(b*100+.5)/100
+        if class == "MONK" then
+            b = b - 0.01
+        end
 		if RAID_CLASS_COLORS[class].r == r and RAID_CLASS_COLORS[class].g == g and RAID_CLASS_COLORS[class].b == b then
 			frame.hasClass = true
 			frame.isFriendly = false
@@ -460,6 +463,13 @@ local function Colorize(frame)
 	frame.hp:SetStatusBarColor(r,g,b)
 end
 
+local function OnHealthValueChanged(frame)
+	local frame = frame:GetParent()
+	frame.hp:SetMinMaxValues(frame.healthOriginal:GetMinMaxValues())
+    frame.hp:SetValue(frame.healthOriginal:GetValue() - 1)
+	frame.hp:SetValue(frame.healthOriginal:GetValue())
+end
+
 --HealthBar OnShow, use this to set variables for the nameplate, also size the healthbar here because it likes to lose it's
 --size settings when it gets reshown
 local function UpdateObjects(frame)
@@ -475,7 +485,6 @@ local function UpdateObjects(frame)
 
 	frame.hp:SetMinMaxValues(frame.healthOriginal:GetMinMaxValues())
 	frame.hp:SetValue(frame.healthOriginal:GetValue())
-
 
 	--Colorize Plate
 	Colorize(frame)
@@ -553,6 +562,7 @@ local function SkinObjects(frame)
 	end
 
 	frame.hp:HookScript("OnShow", UpdateObjects)
+    frame.healthOriginal:HookScript("OnValueChanged", OnHealthValueChanged)
 
 	--Cast Bar
 	cb:SetStatusBarTexture(R["media"].normal)
@@ -662,12 +672,14 @@ local function UpdateThreat(frame, elapsed)
 		if g + b == 0 then
 			--Have Threat
 			if R.Role == "Tank" then
+				frame.hp:SetStatusBarColor(goodR, goodG, goodB)
+				frame.hp.hpbg:SetTexture(goodR, goodG, goodB, 0.1)
 				frame.hp.backdrop:SetBackdropBorderColor(0, 0, 0, 1)
-				frame.hp.hpbg:SetTexture(goodR, goodG, goodB, 0.1) 
 				frame.threatStatus = "GOOD"
 			else
-				frame.hp.backdrop:SetBackdropBorderColor(1, 0, 0,1)--红色边框
+				frame.hp:SetStatusBarColor(badR, badG, badB)
 				frame.hp.hpbg:SetTexture(badR, badG, badB, 0.1)
+				frame.hp.backdrop:SetBackdropBorderColor(badR, badG, badB, 1)
 				frame.threatStatus = "BAD"
 			end
 		else

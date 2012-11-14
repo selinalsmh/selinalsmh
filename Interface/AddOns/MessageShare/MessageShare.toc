@@ -1,0 +1,14 @@
+## Interface: 50001
+## Author: 暗影飘零@蘑菇
+## Title: share message all
+## Title-zhTW:全服信息共享
+## Title-zhCN:全服信息共享
+## Notes:Offline BlackMarket,Galleon Watch
+## Notes-zhTW:共享黑市,野外首領等信息,帆船刷新後,如果被其中一個使用此插件玩家看到,所有人此插件使用者屏幕中間會有文字提示,自動邀請玩家
+## Notes-zhCN:共享黑市,野外首领等信息,炮舰刷新后,如果被其中一个使用此插件玩家看到,所有人此插件使用者屏幕中间会有文字提示,自动邀请玩家
+## SavedVariables: MessageShareDB
+
+Libs\embeds.xml
+locale.lua
+MessageShare.lua
+Modules\embeds.xml

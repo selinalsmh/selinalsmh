@@ -2,7 +2,7 @@
 local L		= mod:GetLocalizedStrings()
 local sndWOP	= mod:NewSound(nil, "SoundWOP", true)
 
-mod:SetRevision(("$Revision: 8004 $"):sub(12, -3))
+mod:SetRevision(("$Revision: 8070 $"):sub(12, -3))
 mod:SetCreatureID(62980)
 mod:SetModelID(42807)
 mod:SetZone()
@@ -16,7 +16,8 @@ mod:RegisterEventsInCombat(
 	"SPELL_AURA_REMOVED",
 	"SPELL_CAST_START",
 --	"SPELL_CAST_SUCCESS",
-	"RAID_BOSS_EMOTE"
+	"RAID_BOSS_EMOTE",
+	"UNIT_SPELLCAST_SUCCEEDED"
 )
 
 --[[WoL Reg expression
@@ -25,7 +26,7 @@ mod:RegisterEventsInCombat(
 --Notes: Currently, his phase 2 chi blast abiliteis are not detectable via traditional combat log. maybe with transcriptor.
 local warnInhale			= mod:NewStackAnnounce(122852, 2)
 local warnExhale			= mod:NewTargetAnnounce(122761, 3)
-local warnForceandVerve		= mod:NewSpellAnnounce(122713, 4)
+local warnForceandVerve		= mod:NewCastAnnounce(122713, 4, 4)
 local warnAttenuation		= mod:NewSpellAnnounce(127834, 4)
 local warnConvert			= mod:NewTargetAnnounce(122740, 4)
 
@@ -45,10 +46,13 @@ local specwarnAttenuation	= mod:NewSpecialWarningSpell(127834, nil, nil, nil, tr
 --local timerExhaleCD			= mod:NewCDTimer(41, 122761)
 local timerExhale				= mod:NewTargetTimer(6, 122761)
 --local timerForceCD			= mod:NewCDTimer(48, 122713)--Phase 1, every 41 seconds since exhale keeps resetting it, phase 2, 48 seconds or as wildly high as 76 seconds if exhale resets it late in it's natural CD
+local timerForceCast			= mod:NewCastTimer(4, 122713)
 local timerForce				= mod:NewBuffActiveTimer(12.5, 122713)
 --local timerAttenuationCD		= mod:NewCDTimer(34, 127834)--34-41 second variations, when not triggered off exhale. It's ALWAYS 11 seconds after exhale.
 local timerAttenuation			= mod:NewBuffActiveTimer(14, 127834)
 --local timerConvertCD			= mod:NewCDTimer(41, 122740)--totally don't know this CD, but it's probably 41 like other specials in phase 1.
+
+local berserkTimer				= mod:NewBerserkTimer(660)
 
 mod:AddBoolOption("MindControlIcon", true)
 
@@ -92,6 +96,7 @@ function mod:OnCombatStart(delay)
 --	recentPlatformChange = false
 --	platform = 0
 	table.wipe(MCTargets)
+	berserkTimer:Start(-delay)
 	table.wipe(ExhaleMarkers)
 	table.wipe(MindControlMarkers)
 end
@@ -161,7 +166,6 @@ function mod:SPELL_CAST_START(args)
 	elseif args:IsSpellID(122713) then
 		warnForceandVerve:Show()
 		specwarnForce:Show()
-		sndWOP:Play("Interface\\AddOns\\DBM-Core\\extrasounds\\ex_mop_dyq.mp3") --快進定音區
 		if mod:IsHealer() then
 			sndWOP:Schedule(2, "Interface\\AddOns\\DBM-Core\\extrasounds\\healall.mp3") --注意群療
 		end
@@ -203,5 +207,13 @@ function mod:RAID_BOSS_EMOTE(msg)
 		sndWOP:Play("Interface\\AddOns\\DBM-Core\\extrasounds\\justrun.mp3") --快跑
 --		platform = platform + 1
 --		recentPlatformChange = true
+	end
+end
+
+function mod:UNIT_SPELLCAST_SUCCEEDED(uId, _, _, _, spellId)
+	if spellId == 122933 and self:AntiSpam(2, 1) then--Clear Throat (4 seconds before force and verve)
+		warnForceandVerve:Show()
+		sndWOP:Play("Interface\\AddOns\\DBM-Core\\extrasounds\\ex_mop_dyq.mp3") --快進定音區
+		timerForceCast:Start()
 	end
 end

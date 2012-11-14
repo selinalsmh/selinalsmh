@@ -28,6 +28,33 @@ local types = {
     rareelite = " R+ ",
 }
 
+local symbiosis = {
+	gain = {
+		["DEATHKNIGHT"] = {["DK_BLOOD"] = 113072, ["DK_FROST"] = 113516, ["DK_UNHOLY"] = 113516},
+		["HUNTER"] = {["HUNTER_BM"] = 113073, ["HUNTER_MM"] = 113073, ["HUNTER_SV"] = 113073},
+		["MAGE"] = {["MAGE_ARCANE"] = 113074, ["MAGE_FIRE"] = 113074, ["MAGE_FROST"] = 113074},
+		["MONK"] = {["MONK_BREW"] = 113306, ["MONK_MIST"] = 127361, ["MONK_WIND"] = 113275},
+		["PALADIN"] = {["PALADIN_HOLY"] = 113269, ["PALADIN_PROT"] = 122287, ["PALADIN_RET"] = 113075},
+		["PRIEST"] = {["PRIEST_DISC"] = 113506, ["PRIEST_HOLY"] = 113506, ["PRIEST_SHADOW"] = 113277},
+		["ROGUE"] = {["ROGUE_ASS"] = 113613, ["ROGUE_COMBAT"] = 113613, ["ROGUE_SUB"] = 113613},
+		["SHAMAN"] = {["SHAMAN_ELE"] = 113286, ["SHAMAN_ENHANCE"] = 113286, ["SHAMAN_RESTO"] = 113289},
+		["WARLOCK"] = {["WARLOCK_AFFLICTION"] = 113295, ["WARLOCK_DEMO"] = 113295, ["WARLOCK_DESTRO"] = 113295},
+		["WARRIOR"] = {["WARRIOR_ARMS"] = 122294, ["WARRIOR_FURY"] = 122294, ["WARRIOR_PROT"] = 122286}
+	},
+	grant = {
+		["DEATHKNIGHT"] = {["DRUID_BALANCE"] = 110570, ["DRUID_FERAL"] = 122282, ["DRUID_GUARDIAN"] = 122285, ["DRUID_RESTO"] = 110575},
+		["HUNTER"] = {["DRUID_BALANCE"] = 110588, ["DRUID_FERAL"] = 110597, ["DRUID_GUARDIAN"] = 110600, ["DRUID_RESTO"] = 19263},
+		["MAGE"] = {["DRUID_BALANCE"] = 110621, ["DRUID_FERAL"] = 110693, ["DRUID_GUARDIAN"] = 110694, ["DRUID_RESTO"] = 110696},
+		["MONK"] = {["DRUID_BALANCE"] = 126458, ["DRUID_FERAL"] = 128844, ["DRUID_GUARDIAN"] = 126453, ["DRUID_RESTO"] = 126456},
+		["PALADIN"] = {["DRUID_BALANCE"] = 110698, ["DRUID_FERAL"] = 110700, ["DRUID_GUARDIAN"] = 110701, ["DRUID_RESTO"] = 122288},
+		["PRIEST"] = {["DRUID_BALANCE"] = 110707, ["DRUID_FERAL"] = 110715, ["DRUID_GUARDIAN"] = 110717, ["DRUID_RESTO"] = 110718},
+		["ROGUE"] = {["DRUID_BALANCE"] = 110788, ["DRUID_FERAL"] = 110730, ["DRUID_GUARDIAN"] = 122289, ["DRUID_RESTO"] = 110791},
+		["SHAMAN"] = {["DRUID_BALANCE"] = 110802, ["DRUID_FERAL"] = 110807, ["DRUID_GUARDIAN"] = 110803, ["DRUID_RESTO"] = 110806},
+		["WARLOCK"] = {["DRUID_BALANCE"] = 122291, ["DRUID_FERAL"] = 110810, ["DRUID_GUARDIAN"] = 122290, ["DRUID_RESTO"] = 112970},
+		["WARRIOR"] = {["DRUID_BALANCE"] = 122292, ["DRUID_FERAL"] = 112997, ["DRUID_GUARDIAN"] = 113002, ["DRUID_RESTO"] = 113004}
+	}
+}
+
 local function IsInspectFrameOpen()
 	return (InspectFrame and InspectFrame:IsShown()) or (Examiner and Examiner:IsShown())
 end
@@ -179,6 +206,13 @@ function TT:GameTooltip_SetDefaultAnchor(tooltip, parent)
 			tooltip:Point("BOTTOMRIGHT", UIParent, "BOTTOMRIGHT", -50, RayUFRaid25_5:GetBottom() + RayUFRaid25_5:GetHeight() + 30)
 		elseif NumerationFrame and NumerationFrame:IsVisible() and (GetScreenWidth() - NumerationFrame:GetRight()) < 250 then
 			tooltip:Point("BOTTOMRIGHT", UIParent, "BOTTOMRIGHT", -50, NumerationFrame:GetBottom() + NumerationFrame:GetHeight() + 30)
+        elseif Skada then
+            local windows = Skada:GetWindows()
+            if #windows >= 1 and (GetScreenWidth() - windows[1].bargroup:GetRight()) < 250 then
+                tooltip:Point("BOTTOMRIGHT", UIParent, "BOTTOMRIGHT", -50, windows[1].bargroup:GetTop() + 30 + (windows[1].db.enabletitle and windows[1].db.barheight or 0))
+            else
+                tooltip:Point("BOTTOMRIGHT", UIParent, "BOTTOMRIGHT", -50, 160)
+            end
 		else
 			tooltip:Point("BOTTOMRIGHT", UIParent, "BOTTOMRIGHT", -50, 160)
 		end
@@ -269,7 +303,7 @@ function TT:SetiLV()
 			end
 		end
 	end
-	
+
 	for i = #ilvcache, 1, -1 do
 		if (ilvcurrent.name == ilvcache[i].name) then
 			tremove(ilvcache,i)
@@ -442,9 +476,11 @@ function TT:OnTooltipSetUnit(tooltip)
     if unitLevel < 0 then unitLevel = "??" end
     if UnitIsPlayer(unit) then
         local unitRace = UnitRace(unit)
-        local unitClass = UnitClass(unit)
+        local unitClass, unitClassEn = UnitClass(unit)
+		local unitLevel = UnitLevel(unit)
         local guild, rank = GetGuildInfo(unit)
         local playerGuild = GetGuildInfo("player")
+		local unitSpec = GetSpecialization()
         GameTooltipStatusBar:SetStatusBarColor(unpack({GameTooltip_UnitColor(unit)}))
         if guild then
             GameTooltipTextLeft2:SetFormattedText("<%s>"..R:RGBToHex(1, 1, 1).." %s|r", guild, rank)
@@ -472,9 +508,39 @@ function TT:OnTooltipSetUnit(tooltip)
         if UnitFactionGroup(unit) and UnitFactionGroup(unit) ~= "Neutral" then
             GameTooltipTextLeft1:SetText("|TInterface\\Addons\\RayUI\\media\\UI-PVP-"..select(1, UnitFactionGroup(unit))..".blp:16:16:0:0:64:64:5:40:0:35|t"..GameTooltipTextLeft1:GetText())
         end
+		self:iLVSetUnit()
+		self:TalentSetUnit()
+		if not UnitIsEnemy(unit, "player") and unitSpec then
+			for i = 1, 40 do
+				if select(11, UnitAura(unit, i, "HELPFUL")) == 110309 then return end
+			end
+			local spec = SPEC_CORE_ABILITY_TEXT[select(1, GetSpecializationInfo(unitSpec))]
+			local spellID
+			if R.myclass == "DRUID" and UnitLevel("player") >= 87 and unitClassEn ~= "DRUID" then
+				spellID = symbiosis.grant[unitClassEn][spec]
+			elseif R.myclass ~= "DRUID" and (unitClassEn == "DRUID" and unitLevel >= 87) then
+				spellID = symbiosis.gain[R.myclass][spec]
+			end
+			local name, _, icon = GetSpellInfo(spellID)
+			icon = icon and "|T"..icon..":12:12:0:0:64:64:5:59:5:59|t " or ""
+			if name then
+				GameTooltip:AddDoubleLine(select(1, GetSpellInfo(110309))..": ", icon.."|cffffffff"..name)
+			end
+		end
+    elseif ( UnitIsWildBattlePet(unit) or UnitIsBattlePetCompanion(unit) ) then
+        local petLevel = UnitBattlePetLevel(unit)
+        local petType = _G["BATTLE_PET_DAMAGE_NAME_"..UnitBattlePetType(unit)]
+        for i=2, GameTooltip:NumLines() do
+            local text = _G["GameTooltipTextLeft" .. i]:GetText()
+            if text:find(LEVEL) then
+                _G["GameTooltipTextLeft" .. i]:SetText(petLevel .. unitClassification .. petType)
+                break
+            end
+        end
     else
         for i=2, GameTooltip:NumLines() do
-            if _G["GameTooltipTextLeft" .. i]:GetText():find(LEVEL) or _G["GameTooltipTextLeft" .. i]:GetText():find(creatureType) then
+            local text = _G["GameTooltipTextLeft" .. i]:GetText()
+            if text:find(LEVEL) or text:find(creatureType) then
                 _G["GameTooltipTextLeft" .. i]:SetText(string.format(R:RGBToHex(diffColor.r, diffColor.g, diffColor.b).."%s|r", unitLevel) .. unitClassification .. creatureType)
                 break
             end
@@ -487,9 +553,6 @@ function TT:OnTooltipSetUnit(tooltip)
             break
         end
     end
-
-    self:iLVSetUnit()
-    self:TalentSetUnit()
 end
 
 function TT:Initialize()
@@ -512,7 +575,7 @@ function TT:Initialize()
 	--GameTooltipStatusBar.bg:Point("BOTTOMRIGHT", GameTooltipStatusBar, "BOTTOMRIGHT", 4, -4)
 	--GameTooltipStatusBar.bg:SetFrameStrata(GameTooltipStatusBar:GetFrameStrata())
 	--GameTooltipStatusBar.bg:SetFrameLevel(GameTooltipStatusBar:GetFrameLevel() - 1)
-	--GameTooltipStatusBar.bg:SetBackdrop( { 
+	--GameTooltipStatusBar.bg:SetBackdrop( {
 		--edgeFile = R["media"].glow,
 		--bgFile = R["media"].blank,
 		--edgeSize = R:Scale(4),

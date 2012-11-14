@@ -255,12 +255,25 @@ local function SkinDBM()
             self:Point("TOPLEFT", Minimap, "BOTTOMLEFT", 0, -70)
         end
 	end)
+    DBM.InfoFrame:Show(5, "test")
+    DBM.InfoFrame:Hide()
+    DBMInfoFrame:HookScript("OnShow",function(self)
+		self:SetBackdrop(nil)
+		self:CreateShadow("Background")
+    end)
 
-
-	local RaidNotice_AddMessage_=RaidNotice_AddMessage
-	RaidNotice_AddMessage=function(noticeFrame, textString, colorInfo)
-		if textString:find(" |T") then
-			textString = string.gsub(textString,"(:12:12)",":18:18:0:0:64:64:5:59:5:59")
+	local RaidNotice_AddMessage_ = RaidNotice_AddMessage
+	RaidNotice_AddMessage = function(noticeFrame, textString, colorInfo)
+		if textString:find("|T") then
+            if textString:match(":(%d+):(%d+)") then
+                local size1, size2 = textString:match(":(%d+):(%d+)")
+                size1, size2 = size1 + 6, size2 + 6
+                textString = string.gsub(textString,":(%d+):(%d+)",":"..size1..":"..size2..":0:0:64:64:5:59:5:59")
+            elseif textString:match(":(%d+)|t") then
+                local size = textString:match(":(%d+)|t")
+                size = size + 6
+                textString = string.gsub(textString,":(%d+)|t",":"..size..":"..size..":0:0:64:64:5:59:5:59|t")
+            end
 		end
 		return RaidNotice_AddMessage_(noticeFrame, textString, colorInfo)
 	end
@@ -282,3 +295,21 @@ local function SkinDBM()
 end
 
 S:RegisterSkin("DBM-Core", SkinDBM)
+
+local function SkinGUI()
+	DBM_GUI_OptionsFrame:HookScript("OnShow", function()
+		DBM_GUI_OptionsFrame:StripTextures()
+		DBM_GUI_OptionsFrameBossMods:StripTextures()
+		DBM_GUI_OptionsFrameDBMOptions:StripTextures()
+		S:SetBD(DBM_GUI_OptionsFrame)
+		S:CreateBD(DBM_GUI_OptionsFrameBossMods)
+		S:CreateBD(DBM_GUI_OptionsFrameDBMOptions)
+		S:CreateBD(DBM_GUI_OptionsFramePanelContainer)
+	end)
+	-- U.SkinTab(DBM_GUI_OptionsFrameTab1)
+	-- U.SkinTab(DBM_GUI_OptionsFrameTab2)
+	S:Reskin(DBM_GUI_OptionsFrameOkay)
+	S:ReskinScroll(DBM_GUI_OptionsFramePanelContainerFOVScrollBar)
+end
+
+S:RegisterSkin("DBM-GUI", SkinGUI)
