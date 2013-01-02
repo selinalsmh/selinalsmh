@@ -6,7 +6,7 @@ local positions = {
     player_proc_icon = { "BOTTOMRIGHT", "RayUF_player", "TOPRIGHT", 0, 33 },	-- "玩家重要buff&debuff"
     target_proc_icon = { "BOTTOMLEFT", "RayUF_target", "TOPLEFT", 0, 33 },	-- "目标重要buff&debuff"
     focus_buff_icon = { "BOTTOMLEFT", "RayUF_focus", "TOPLEFT", 0, 10 },	-- "焦点buff&debuff"
-    cd_icon = function() return R:IsDeveloper() and { "TOPLEFT", "RayUIActionBar1", "BOTTOMLEFT", 0, -6 } or { "TOPLEFT", "RayUIActionBar2", "BOTTOMRIGHT", -27, -6 } end,	-- "cd"
+    cd_icon = function() return R:IsDeveloper() and { "TOPLEFT", "RayUIActionBar1", "BOTTOMLEFT", 0, -6 } or { "TOPLEFT", "RayUIActionBar3", "BOTTOMRIGHT", -28, -6 } end,	-- "cd"
     player_special_icon = { "TOPRIGHT", "RayUF_player", "BOTTOMRIGHT", 0, -9 }, -- "玩家特殊buff&debuff"
     pve_player_icon = { "BOTTOM", UIParent, "BOTTOM", -35, 350 }, -- "PVE/PVP玩家buff&debuff"
     pve_target_icon = { "BOTTOM", UIParent, "BOTTOM", 35, 350 }, -- "PVE/PVP目标buff&debuff"
@@ -166,7 +166,7 @@ R["Watcher"] = {
                 { spellID = 124974, filter = "CD" },
                 --星穹大連線
                 { spellID = 112071, filter = "CD" },
-                
+
                 -- 物品
 				-- 手套
 				{slotID = 10, filter = "CD"},
@@ -312,7 +312,7 @@ R["Watcher"] = {
                 { spellID = 131894, filter = "CD" },
                 --山貓衝刺
                 { spellID = 120697, filter = "CD" },
-                
+
                 -- 物品
 				-- 手套
 				{slotID = 10, filter = "CD"},
@@ -344,8 +344,18 @@ R["Watcher"] = {
                 { spellID = 36032, unitId = "player", caster = "player", filter = "DEBUFF" },
                 --寒冰護體
                 { spellID = 11426, unitId = "player", caster = "player", filter = "BUFF" },
-                --2T13效果
-                { spellID = 105785, unitId = "player", caster = "player", filter = "BUFF" },
+                --腦部凍結
+                { spellID = 57761, unitId = "player", caster = "player", filter = "BUFF" },
+                --升溫
+                { spellID = 48107, unitId = "player", caster = "player", filter = "BUFF" },
+                --咒法結界
+                { spellID = 1463, unitId = "player", caster = "player", filter = "BUFF" },
+                --塑能師之能
+                { spellID = 116257, unitId = "player", caster = "player", filter = "BUFF" },
+                --力之符文
+                { spellID = 116014, unitId = "player", caster = "player", filter = "BUFF" },
+                --咒法轉移
+                { spellID = 116267, unitId = "player", caster = "player", filter = "BUFF" },
             },
             {
                 name = "目标重要buff&debuff",
@@ -371,6 +381,10 @@ R["Watcher"] = {
                 { spellID = 11366, unitId = "target", caster = "player", filter = "DEBUFF" },
                 --極度冰凍
                 { spellID = 44572, unitId = "target", caster = "player", filter = "DEBUFF"},
+                --冰霜爆彈
+                { spellID = 112948, unitId = "target", caster = "player", filter = "DEBUFF" },
+                --虛空暴雨
+                { spellID = 114923, unitId = "target", caster = "player", filter = "DEBUFF" },
             },
             {
                 name = "焦点buff&debuff",
@@ -415,7 +429,7 @@ R["Watcher"] = {
                 { spellID = 45438, filter = "CD" },
                 --冰霜之球
                 { spellID = 84714, filter = "CD" },
-                
+
                 -- 物品
 				-- 手套
 				{slotID = 10, filter = "CD"},
@@ -478,7 +492,7 @@ R["Watcher"] = {
 
                 --震盪波
                 { spellID = 46968, unitId = "target", caster = "all", filter = "DEBUFF" },
-                -- 斷筋
+                --斷筋
                 { spellID = 1715, unitId = "target", caster = "all", filter = "DEBUFF" },
                 --雷霆一擊
                 { spellID = 6343, unitId = "target", caster = "player", filter = "DEBUFF" },
@@ -494,6 +508,43 @@ R["Watcher"] = {
                 { spellID = 48484, unitId = "target", caster = "all", filter = "DEBUFF" },
                 --挫志咆哮（德魯伊）
                 { spellID = 99, unitId = "target", caster = "all", filter = "DEBUFF" },
+            },
+            {
+                name = "CD",
+                iconSide = "LEFT",
+                size = 28,
+                barWidth = 170,
+                direction = function() return R:IsDeveloper() and "RIGHT" or "DOWN" end,
+                mode = function() return R:IsDeveloper() and "ICON" or "BAR" end,
+                setpoint = positions.cd_icon,
+
+                --鲁莽
+                { spellID = 1719, filter = "CD" },
+                --颅骨战旗
+                { spellID = 114207, filter = "CD" },
+                --浴血奋战
+                { spellID = 12292, filter = "CD" },
+                --致命平静
+                { spellID = 85730, filter = "CD" },
+                --盾墙
+                { spellID = 871, filter = "CD" },
+                --集结呐喊
+                { spellID = 97462, filter = "CD" },
+                --破胆怒吼
+                { spellID = 5246, filter = "CD" },
+                --天神下凡
+                { spellID = 107574, filter = "CD" },
+
+                -- 物品
+                -- 手套
+                { slotID = 10, filter = "CD" },
+                -- 腰带
+                { slotID = 6, filter = "CD" },
+                -- 披风
+                { slotID = 15, filter = "CD" },
+                -- 饰品
+                { slotID = 13, filter = "CD" },
+                { slotID = 14, filter = "CD" },
             },
         },
         ["SHAMAN"] = {
@@ -603,7 +654,7 @@ R["Watcher"] = {
                 { spellID = 2894, filter = "CD" },
                 --土元素圖騰
                 { spellID = 2062, filter = "CD" },
-                
+
                 -- 物品
 				-- 手套
 				{slotID = 10, filter = "CD"},
@@ -636,6 +687,14 @@ R["Watcher"] = {
 
                 --聖光信標
                 { spellID = 53563, unitId = "target", caster = "player", filter = "BUFF" },
+                --纯净之手
+                { spellID = 114039, unitId = "target", caster = "player", filter = "BUFF" },
+                --永恒之火
+                { spellID = 114163, unitId = "target", caster = "player", filter = "BUFF" },
+                --处决审判
+                { spellID = 114157, unitId = "target", caster = "player", filter = "BUFF" },
+                --圣洁护盾
+                { spellID = 20925, unitId = "target", caster = "player", filter = "BUFF" },
             },
             {
                 name = "玩家重要buff&debuff",
@@ -645,10 +704,18 @@ R["Watcher"] = {
 
                 --神聖之盾
                 { spellID = 20925, unitId = "player", caster = "player", filter = "BUFF" },
+                --神圣意志
+                { spellID = 90174, unitId = "player", caster = "player", filter = "BUFF" },
+                --破晓
+                { spellID = 88819, unitId = "player", caster = "player", filter = "BUFF" },
                 --神性祈求
                 { spellID = 54428, unitId = "player", caster = "player", filter = "BUFF" },
                 --神恩術
                 { spellID = 31842, unitId = "player", caster = "player", filter = "BUFF" },
+                --神圣复仇者
+                { spellID = 105809, unitId = "player", caster = "player", filter = "BUFF" },
+                --远古能量
+                { spellID = 86700, unitId = "player", caster = "player", filter = "BUFF" },
                 --異端審問
                 { spellID = 84963, unitId = "player", caster = "player", filter = "BUFF" },
                 --破曉之光
@@ -670,6 +737,8 @@ R["Watcher"] = {
                 setpoint = positions.target_proc_icon,
                 size = 38,
 
+                --制裁之錘
+                { spellID = 853, unitId = "target", caster = "all", filter = "DEBUFF" },
                 --制裁之拳
                 { spellID = 105593, unitId = "target", caster = "all", filter = "DEBUFF" },
             },
@@ -684,7 +753,8 @@ R["Watcher"] = {
 
                 --制裁之錘
                 { spellID = 853, unitId = "focus", caster = "all", filter = "DEBUFF" },
-
+                --制裁之拳
+                { spellID = 105593, unitId = "target", caster = "all", filter = "DEBUFF" },
             },
             {
                 name = "CD",
@@ -748,7 +818,7 @@ R["Watcher"] = {
 
                 --真言术：盾
                 { spellID = 17, unitId = "target", caster = "all", filter = "BUFF" },
-                --虚弱灵魂       
+                --虚弱灵魂
                 { spellID = 6788, unitId = "target", caster = "all", filter = "DEBUFF" },
                 --恢复
                 { spellID = 139, unitId = "target", caster = "player", filter = "BUFF" },
@@ -846,7 +916,7 @@ R["Watcher"] = {
                 { spellID = 19236, filter = "CD" },
                 --大天使
                 { spellID = 81700, filter = "CD" },
-                
+
                 -- 物品
 				-- 手套
 				{slotID = 10, filter = "CD"},
@@ -1095,7 +1165,7 @@ R["Watcher"] = {
                 { spellID = 121471, filter = "CD" },
                 --奧術之流
                 { spellID = 25046, filter = "CD" },
-                
+
                 -- 物品
 				-- 手套
 				{slotID = 10, filter = "CD"},
@@ -1139,7 +1209,7 @@ R["Watcher"] = {
                 { spellID = 49222, unitId = "player", caster = "player", filter = "BUFF" },
                 --冰霜之柱
                 { spellID = 51271, unitId = "player", caster = "player", filter = "BUFF" },
-                --血魄充能			
+                --血魄充能
                 { spellID = 114851, unitId = "player", caster = "player", filter = "BUFF" },
                 --寶寶能量
                 { spellID = 91342, unitId = "pet", caster = "player", filter = "BUFF" },
@@ -1187,6 +1257,7 @@ R["Watcher"] = {
 				{ spellID = 124274, unitId = "player", caster = "all", filter = "DEBUFF" },
 				--酒仙大緩勁
 				{ spellID = 124273, unitId = "player", caster = "all", filter = "DEBUFF" },
+
 			},
             {
                 name = "目标buff&debuff",
@@ -1233,6 +1304,8 @@ R["Watcher"] = {
 				{ spellID = 125174, unitId = "player", caster = "player", filter = "BUFF" },
 				--蛟龍之誠
 				{ spellID = 127722, unitId = "player", caster = "player", filter = "BUFF" },
+				--活力之雾
+				{ spellID = 118674, unitId = "player", caster = "player", filter = "BUFF" },
             },
             {
                 name = "目标重要buff&debuff",
@@ -1253,6 +1326,8 @@ R["Watcher"] = {
 				{ spellID = 117368, unitId = "player", caster = "player", filter = "BUFF" },
                 --旭日东升踢
                 { spellID = 130320, unitId = "target", caster = "player", filter = "DEBUFF" },
+				--葵花点穴手
+				{ spellID = 121125, unitId = "player", caster = "player", filter = "BUFF" },
             },
             {
                 name = "焦点buff&debuff",
@@ -1323,7 +1398,7 @@ R["Watcher"] = {
                 { spellID = 126554, unitId = "player", caster = "player", filter = "BUFF" },
                 --秦璽的極化徽印
                 { spellID = 126588, unitId = "player", caster = "player", filter = "BUFF" },
-                
+
                 --工程
                 --神經突觸彈簧(敏捷)
                 { spellID = 96228, unitId = "player", caster = "player", filter = "BUFF" },
@@ -1589,7 +1664,9 @@ R["Watcher"] = {
                 { spellID = 20549, unitId = "player", caster = "all", filter = "DEBUFF" },
 
                 --副本
+
                 --魔古山寶庫
+
                 --石衛士
                 --碧玉鎖鏈
                 { spellID = 130395, unitId = "player", caster = "all", filter = "DEBUFF", fuzzy = true },
@@ -1607,10 +1684,17 @@ R["Watcher"] = {
                 { spellID = 117549, unitId = "player", caster = "all", filter = "BUFF", fuzzy = true },
 
                 --恐懼之心
+
+                --刀鋒領主塔亞克
+				--無形打擊
+                { spellID = 123017, unitId = "player", caster = "all", filter = "DEBUFF", fuzzy = true },
+
                 --風領主瑪爾加拉克
+				--琥珀監獄
                 { spellID = 121885, unitId = "player", caster = "all", filter = "DEBUFF", fuzzy = true },
 
                 --豐泉臺
+
                 --恐懼之煞
                 --無畏
                 { spellID = 118977, unitId = "player", caster = "all", filter = "BUFF", fuzzy = true },

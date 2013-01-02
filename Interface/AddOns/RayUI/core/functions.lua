@@ -441,13 +441,14 @@ function R:RGBToHex(r, g, b)
 end
 
 function R:ShortValue(v)
-	if v >= 1e5 then
-		return ("%.1fW"):format(v / 1e4):gsub("%.?0+([km])$", "%1")
+	if v >= 1e6 then
+		return ("%.1fm"):format(v / 1e6):gsub("%.?0+([km])$", "%1")
+	elseif v >= 1e3 or v <= -1e3 then
+		return ("%.1fk"):format(v / 1e3):gsub("%.?0+([km])$", "%1")
 	else
 		return v
 	end
 end
-
 
 function R:ShortenString(string, numChars, dots)	
 	local bytes = string:len()
@@ -542,7 +543,9 @@ end
 for class = 1, 2 do
 	local subs = {GetAuctionItemSubClasses(class)}
 	for i, subclass in ipairs(Unusable[class]) do
-		Unusable[subs[subclass]] = true
+		if subs[subclass] then
+			Unusable[subs[subclass]] = true
+		end
 	end
 	Unusable[class] = nil
 	subs = nil

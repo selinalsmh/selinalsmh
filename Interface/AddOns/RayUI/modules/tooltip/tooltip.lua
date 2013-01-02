@@ -18,8 +18,8 @@ local ilvcurrent = {}
 
 local lastInspectRequest = 0
 
-local gcol = {112/255, 192/255, 245/255}--{.35, 1, .6}										-- Guild Color
-local pgcol = {112/255, 192/255, 245/255}--{1, .12, .8} 									-- Player's Guild Color
+local gcol = {.35, 1, .6}										-- Guild Color
+local pgcol = {1, .12, .8} 									-- Player's Guild Color
 
 local types = {
     rare = " R ",
@@ -54,6 +54,20 @@ local symbiosis = {
 		["WARRIOR"] = {["DRUID_BALANCE"] = 122292, ["DRUID_FERAL"] = 112997, ["DRUID_GUARDIAN"] = 113002, ["DRUID_RESTO"] = 113004}
 	}
 }
+
+local ItemUpgrade = setmetatable ({
+	[446] = 4,
+	[447] = 8,
+
+	[454] = 4,
+	[455] = 8,
+
+	[460] = 8,
+	[461] = 12,
+	[462] = 16,
+
+	[452] = 8,
+},{__index=function() return 0 end})
 
 local function IsInspectFrameOpen()
 	return (InspectFrame and InspectFrame:IsShown()) or (Examiner and Examiner:IsShown())
@@ -403,13 +417,14 @@ function TT:PLAYER_ENTERING_WORLD(event)
 end
 
 function TT:GetItemScore(iLink)
-   local _, _, itemRarity, itemLevel, _, _, _, _, itemEquip = GetItemInfo(iLink)
-   if (IsEquippableItem(iLink)) then
-      if not   (itemLevel > 1) and (itemRarity > 1) then
-      return 0
-      end
-   end
-   return itemLevel
+    local _, _, itemRarity, itemLevel, _, _, _, _, itemEquip = GetItemInfo(iLink)
+    if (IsEquippableItem(iLink)) then
+        if not   (itemLevel > 1) and (itemRarity > 1) then
+            return 0
+        end
+    end
+    local code = string.match(iLink, ":(%d+)|h")
+    return itemLevel + ItemUpgrade[tonumber(code)]
 end
 
 function TT:SetStyle(tooltip)
@@ -449,7 +464,7 @@ function TT:SetStyle(tooltip)
 	end
 	if tooltip.NumLines then
 		for index=1, tooltip:NumLines() do
-			_G[tooltip:GetName().."TextLeft"..index]:SetFont(R["media"].font, 13, "OUTLINE")--SetShadowOffset(R.mult, -R.mult)
+			_G[tooltip:GetName().."TextLeft"..index]:SetShadowOffset(R.mult, -R.mult)
 		end
 	end
 	tooltip.needRefresh = true
@@ -474,6 +489,15 @@ function TT:OnTooltipSetUnit(tooltip)
     local unitLevel = UnitLevel(unit)
     local diffColor = unitLevel > 0 and GetQuestDifficultyColor(UnitLevel(unit)) or QuestDifficultyColors["impossible"]
     if unitLevel < 0 then unitLevel = "??" end
+    if UnitExists(unit.."target") then
+        local r, g, b = GameTooltip_UnitColor(unit.."target")
+        if UnitName(unit.."target") == UnitName("player") then
+            text = R:RGBToHex(1, 0, 0)..">>"..YOU.."<<|r"
+        else
+            text = R:RGBToHex(r, g, b)..UnitName(unit.."target").."|r"
+        end
+        tooltip:AddDoubleLine(TARGET, text)
+    end
     if UnitIsPlayer(unit) then
         local unitRace = UnitRace(unit)
         local unitClass, unitClassEn = UnitClass(unit)
@@ -488,15 +512,6 @@ function TT:OnTooltipSetUnit(tooltip)
             else
                 GameTooltipTextLeft2:SetTextColor(gcol[1], gcol[2], gcol[3])
             end
-        end
-        if UnitExists(unit.."target") then
-            local r, g, b = GameTooltip_UnitColor(unit.."target")
-            if UnitName(unit.."target") == UnitName("player") then
-                text = R:RGBToHex(1, 0, 0)..">>"..YOU.."<<|r"
-            else
-                text = R:RGBToHex(r, g, b)..UnitName(unit.."target").."|r"
-            end
-            tooltip:AddDoubleLine(TARGET, text)
         end
         for i=2, GameTooltip:NumLines() do
             if _G["GameTooltipTextLeft" .. i]:GetText():find(PLAYER) then
@@ -583,7 +598,7 @@ function TT:Initialize()
 	--GameTooltipStatusBar.bg:SetBackdropColor(0, 0, 0, 0.5)
 	--GameTooltipStatusBar.bg:SetBackdropBorderColor(0, 0, 0, 0.8)
     GameTooltipStatusBar:CreateShadow("Background")
-	GameTooltipStatusBar:SetHeight(10)
+	GameTooltipStatusBar:SetHeight(8)
 	GameTooltipStatusBar:SetStatusBarTexture(R["media"].normal)
 	GameTooltipStatusBar:ClearAllPoints()
 	GameTooltipStatusBar:SetPoint("TOPLEFT", GameTooltip, "BOTTOMLEFT", 3, -2)

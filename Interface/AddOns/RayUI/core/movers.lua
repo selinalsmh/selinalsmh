@@ -15,6 +15,11 @@ local MoverTypes = {
     "ARENA",
 }
 
+local function SizeChanged(frame)
+	if InCombatLockdown() then return; end
+	frame.mover:SetSize(frame:GetSize())
+end
+
 local function GetPoint(obj)
 	local point, anchor, secondaryPoint, x, y = obj:GetPoint()
 	if not anchor then anchor = UIParent end
@@ -189,6 +194,8 @@ local function CreateMover(parent, name, text, overlay, postdrag)
 		self:SetUserPlaced(false)
 	end)
 
+    parent:SetScript("OnSizeChanged", SizeChanged)
+	parent.mover = f
 	parent:ClearAllPoints()
 	parent:SetPoint(point, f, 0, 0)
 	parent.ClearAllPoints = function() return end
@@ -370,19 +377,3 @@ function R:LoadMovers()
 		CreateMover(p, n, t, o, pd)
 	end
 end
-
-function R:PLAYER_REGEN_DISABLED()
-	local err = false
-	for name, _ in pairs(R.CreatedMovers) do
-		if _G[name]:IsShown() then
-			err = true
-			_G[name]:Hide()
-		end
-	end
-	if err == true then
-		R:Print(ERR_NOT_IN_COMBAT)
-        R:ToggleConfigMode(true)
-	end
-end
-
-R:RegisterEvent("PLAYER_REGEN_DISABLED")

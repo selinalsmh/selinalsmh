@@ -956,8 +956,8 @@ function CH:SetChat()
 	ToggleChatColorNamesByClassGroup(true, "RAID")
 	ToggleChatColorNamesByClassGroup(true, "RAID_LEADER")
 	ToggleChatColorNamesByClassGroup(true, "RAID_WARNING")
-	ToggleChatColorNamesByClassGroup(true, "BATTLEGROUND")
-	ToggleChatColorNamesByClassGroup(true, "BATTLEGROUND_LEADER")
+	ToggleChatColorNamesByClassGroup(true, "INSTANCE_CHAT")
+	ToggleChatColorNamesByClassGroup(true, "INSTANCE_CHAT_LEADER")
 	ToggleChatColorNamesByClassGroup(true, "CHANNEL1")
 	ToggleChatColorNamesByClassGroup(true, "CHANNEL2")
 	ToggleChatColorNamesByClassGroup(true, "CHANNEL3")
@@ -1047,8 +1047,10 @@ function CH:Initialize()
 		GeneralDockManager:SetParent(ChatBG)
 	end
 
-	CHAT_BATTLEGROUND_GET = "|Hchannel:Battleground|h".."[BG]".."|h %s:\32"
-	CHAT_BATTLEGROUND_LEADER_GET = "|Hchannel:Battleground|h".."[BG]".."|h %s:\32"
+	CHAT_INSTANCE_CHAT_GET = "|Hchannel:INSTANCE_CHAT|h".."[I]".."|h %s:\32"
+	CHAT_INSTANCE_CHAT_LEADER_GET = "|Hchannel:INSTANCE_CHAT|h".."[IL]".."|h %s:\32"
+	--CHAT_BATTLEGROUND_GET = "|Hchannel:Battleground|h".."[BG]".."|h %s:\32"
+	--CHAT_BATTLEGROUND_LEADER_GET = "|Hchannel:Battleground|h".."[BG]".."|h %s:\32"
 	CHAT_BN_WHISPER_GET = "%s:\32"
 	CHAT_GUILD_GET = "|Hchannel:Guild|h".."[G]".."|h %s:\32"
 	CHAT_OFFICER_GET = "|Hchannel:o|h".."[O]".."|h %s:\32"

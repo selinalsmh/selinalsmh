@@ -106,7 +106,8 @@ local function LoadSkin()
 		"GuildInviteFrameDeclineButton",
 		"RolePollPopupAcceptButton",
 		"GhostFrame",
-		"InterfaceOptionsHelpPanelResetTutorials"
+		"InterfaceOptionsHelpPanelResetTutorials",
+		"SideDressUpModelResetButton"
 	}
 
 	for i = 1, #buttons do
@@ -629,7 +630,8 @@ local function LoadSkin()
 		"InterfaceOptionsHelpPanelShowLuaErrors",
 		"InterfaceOptionsHelpPanelColorblindMode",
 		"InterfaceOptionsHelpPanelMovePad",
-		"InterfaceOptionsControlsPanelAutoOpenLootHistory"
+		"InterfaceOptionsControlsPanelAutoOpenLootHistory",
+		"InterfaceOptionsCombatPanelLossOfControl"
 	}
 	for i = 1, #checkboxes do
 		S:ReskinCheck(_G[checkboxes[i]])
@@ -656,7 +658,12 @@ local function LoadSkin()
 		"CompactUnitFrameProfilesGeneralOptionsFrameHealthTextDropdown",
 		"InterfaceOptionsCameraPanelStyleDropDown",
 		"InterfaceOptionsMousePanelClickMoveStyleDropDown",
-		"Advanced_GraphicsAPIDropDown"
+		"Advanced_GraphicsAPIDropDown",
+		"InterfaceOptionsCombatPanelLossOfControlFullDropDown",
+		"InterfaceOptionsCombatPanelLossOfControlSilenceDropDown",
+		"InterfaceOptionsCombatPanelLossOfControlInterruptDropDown",
+		"InterfaceOptionsCombatPanelLossOfControlDisarmDropDown",
+		"InterfaceOptionsCombatPanelLossOfControlRootDropDown"
 	}
 	for i = 1, #dropdowns do
 		S:ReskinDropDown(_G[dropdowns[i]])
@@ -783,6 +790,22 @@ local function LoadSkin()
 	 
 		MacOptionsFrameDefaults:SetWidth(96)
 		MacOptionsFrameDefaults:SetHeight(22)
+	end
+
+	SideDressUpModel:HookScript("OnShow", function(self)
+		self:ClearAllPoints()
+		self:SetPoint("LEFT", self:GetParent():GetParent(), "RIGHT", 1, 0)
+	end)
+	SideDressUpModel.bg = CreateFrame("Frame", nil, SideDressUpModel)
+	SideDressUpModel.bg:SetPoint("TOPLEFT", 0, 1)
+	SideDressUpModel.bg:SetPoint("BOTTOMRIGHT", 1, -1)
+	SideDressUpModel.bg:SetFrameLevel(SideDressUpModel:GetFrameLevel()-1)
+	S:CreateBD(SideDressUpModel.bg)
+	S:Reskin(SideDressUpModelResetButton)
+	S:ReskinClose(SideDressUpModelCloseButton)
+	select(5, SideDressUpModelCloseButton:GetRegions()):Hide()
+	for i = 1, 4 do
+		select(i, SideDressUpFrame:GetRegions()):Hide()
 	end
 end
 

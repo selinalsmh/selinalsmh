@@ -149,6 +149,10 @@ function NP:CheckHealers()
 	end
 end
 
+local function RoundColors(r, g, b)
+    return floor(r*100+.5)/100, floor(g*100+.5)/100, floor(b*100+.5)/100
+end
+
 local function QueueObject(parent, object)
 	parent.queue = parent.queue or {}
 	parent.queue[object] = true
@@ -158,18 +162,12 @@ local function HideObjects(parent)
 	for object in pairs(parent.queue) do
 		if(object:GetObjectType() == "Texture") then
 			object:SetTexture(nil)
-			object.SetTexture = function() return end
+			object:SetTexCoord(0, 0, 0, 0)
 		elseif (object:GetObjectType() == "FontString") then
-			object.ClearAllPoints = function() return end
-			object.SetFont = function() return end
-			object.SetPoint = function() return end
-			object:Hide()
-			object.Show = function() return end
-			object.SetText = function() return end
-			object.SetShadowOffset = function() return end
+			object:SetWidth(0.001)
 		else
 			object:Hide()
-			object.Show = function() return end
+			object.Show = R.dummy
 		end
 	end
 end
@@ -205,7 +203,7 @@ end
 local function UpdateAuraAnchors(frame)
 	for i = 1, 5 do
 		if frame.icons and frame.icons[i] and frame.icons[i]:IsShown() then
-			if frame.icons.lastShown then 
+			if frame.icons.lastShown then
 				frame.icons[i]:SetPoint("RIGHT", frame.icons.lastShown, "LEFT", -2, 0)
 			else
 				frame.icons[i]:SetPoint("RIGHT",frame.icons,"RIGHT")
@@ -229,7 +227,7 @@ local function CreateAuraIcon(parent)
 	button.shadow:SetFrameLevel(0)
 	button.shadow:Point("TOPLEFT", -2*noscalemult, 2*noscalemult)
 	button.shadow:Point("BOTTOMRIGHT", 2*noscalemult, -2*noscalemult)
-	button.shadow:SetBackdrop( { 
+	button.shadow:SetBackdrop( {
 		edgeFile = R["media"].glow,
 		bgFile = R["media"].blank,
 		edgeSize = R:Scale(4),
@@ -326,7 +324,7 @@ local function UpdateAuraIcon(button, unit, index, filter)
 	button.duration = duration
 	button.spellID = spellID
 	button.timeLeft = expirationTime
-	if count > 1 then 
+	if count > 1 then
 		button.count:SetText(count)
 	else
 		button.count:SetText("")
@@ -361,7 +359,7 @@ local function OnAura(frame, unit)
 	for index = i, #frame.icons do frame.icons[index]:Hide() end
 end
 
---Color the castbar depending on if we can interrupt or not, 
+--Color the castbar depending on if we can interrupt or not,
 --also resize it as nameplates somehow manage to resize some frames when they reappear after being hidden
 local function UpdateCastbar(frame)
 	frame:ClearAllPoints()
@@ -390,6 +388,23 @@ local function UpdateCastText(frame, curValue)
 	end
 end
 
+--Create our blacklist for nameplates, so prevent a certain nameplate from ever showing
+local function CheckFilter(frame, ...)
+	if PlateBlacklist[frame.hp.oldname:GetText()] then
+		frame:SetScript("OnUpdate", function() end)
+		frame.hp:Hide()
+		frame.cb:Hide()
+		frame.overlay:Hide()
+		frame.hp.oldlevel:Hide()
+	end
+
+	if BattleGroundHealers[frame.hp.oldname:GetText()] then
+		frame.healerIcon:Show()
+	else
+		frame.healerIcon:Hide()
+	end
+end
+
 --Sometimes castbar likes to randomly resize
 local OnValueChanged = function(self, curValue)
 	UpdateCastText(self, curValue)
@@ -407,6 +422,8 @@ end
 --We need to reset everything when a nameplate it hidden, this is so theres no left over data when a nameplate gets reshown for a differant mob.
 local function OnHide(frame)
 	frame.hp:SetStatusBarColor(frame.hp.rcolor, frame.hp.gcolor, frame.hp.bcolor)
+    frame.hp:SetScale(1)
+    frame:SetScale(1)
 	frame.overlay:Hide()
 	frame.cb:Hide()
 	frame.unit = nil
@@ -414,6 +431,7 @@ local function OnHide(frame)
 	frame.guid = nil
 	frame.hasClass = nil
 	frame.isFriendly = nil
+	frame.isTapped = nil
 	frame.hp.rcolor = nil
 	frame.hp.gcolor = nil
 	frame.hp.bcolor = nil
@@ -427,15 +445,15 @@ local function OnHide(frame)
 end
 
 --Color Nameplate
-local function Colorize(frame)
-	local r,g,b = frame.healthOriginal:GetStatusBarColor()
+local function Colorize(frame, r, g, b)
+    frame.hp.originalr, frame.hp.originalg, frame.hp.originalb = r, g, b
 
 	for class, color in pairs(RAID_CLASS_COLORS) do
-		local r, g, b = floor(r*100+.5)/100, floor(g*100+.5)/100, floor(b*100+.5)/100
+		local bb = b
         if class == "MONK" then
-            b = b - 0.01
+            bb = bb - 0.01
         end
-		if RAID_CLASS_COLORS[class].r == r and RAID_CLASS_COLORS[class].g == g and RAID_CLASS_COLORS[class].b == b then
+		if RAID_CLASS_COLORS[class].r == r and RAID_CLASS_COLORS[class].g == g and RAID_CLASS_COLORS[class].b == bb then
 			frame.hasClass = true
 			frame.isFriendly = false
 			frame.hp:SetStatusBarColor(unpack(R.colors.class[class]))
@@ -443,7 +461,13 @@ local function Colorize(frame)
 		end
 	end
 
-	if g+b == 0 then -- hostile
+    frame.isTapped = nil
+
+	if (r + b + b) > 2 then -- tapped
+		r,g,b = 0.6, 0.6, 0.6
+		frame.isFriendly = false
+		frame.isTapped = true
+	elseif g+b == 0 then -- hostile
 		r,g,b = unpack(R.colors.reaction[1])
 		frame.isFriendly = false
 	elseif r+b == 0 then -- friendly npc
@@ -461,6 +485,14 @@ local function Colorize(frame)
 	frame.hasClass = false
 
 	frame.hp:SetStatusBarColor(r,g,b)
+end
+
+local function UpdateColoring(frame)
+    local r, g, b = RoundColors(frame.healthOriginal:GetStatusBarColor())
+
+    if (r ~= frame.hp.originalr or g ~= frame.hp.originalg or b ~= frame.hp.originalb) then
+        Colorize(frame, r, g, b)
+    end
 end
 
 local function OnHealthValueChanged(frame)
@@ -487,8 +519,9 @@ local function UpdateObjects(frame)
 	frame.hp:SetValue(frame.healthOriginal:GetValue())
 
 	--Colorize Plate
-	Colorize(frame)
-	frame.hp.rcolor, frame.hp.gcolor, frame.hp.bcolor = frame.hp:GetStatusBarColor()
+    local r, g, b = RoundColors(frame.healthOriginal:GetStatusBarColor())
+    Colorize(frame, r, g, b)
+    frame.hp.rcolor, frame.hp.gcolor, frame.hp.bcolor = frame.hp:GetStatusBarColor()
 	frame.hp.hpbg:SetTexture(frame.hp.rcolor, frame.hp.gcolor, frame.hp.bcolor, 0.1)
 	frame.hp.name:SetTextColor(frame.hp.rcolor, frame.hp.gcolor, frame.hp.bcolor)
 
@@ -512,14 +545,16 @@ local function UpdateObjects(frame)
 	frame:RegisterEvent("UNIT_AURA")
 	frame:HookScript("OnEvent", OnAura)
 
+    CheckFilter(frame)
 	HideObjects(frame)
 end
 
 --This is where we create most "Static" objects for the nameplate, it gets fired when a nameplate is first seen.
-local function SkinObjects(frame)
+local function SkinObjects(frame, nameFrame)
 	local noscalemult = R.mult * UIParent:GetScale()
 	local oldhp, cb = frame:GetChildren()
-	local threat, hpborder, overlay, oldname, oldlevel, bossicon, raidicon, elite = frame:GetRegions()
+	local threat, hpborder, overlay, oldlevel, bossicon, raidicon, elite = frame:GetRegions()
+	local oldname = nameFrame:GetRegions()
 	local _, cbborder, cbshield, cbicon = cb:GetRegions()
 
 	if not frame.hp then
@@ -532,12 +567,16 @@ local function SkinObjects(frame)
 		CreateVirtualFrame(frame.hp)
 		frame.hp.hpbg = frame.hp:CreateTexture(nil, "BORDER")
 		frame.hp.hpbg:SetAllPoints(frame.hp)
-		frame.hp.hpbg:SetTexture(1,1,1,0.1) 
+		frame.hp.hpbg:SetTexture(1,1,1,0.1)
 	end
 
 	frame.hp.oldlevel = oldlevel
 	frame.hp.boss = bossicon
 	frame.hp.elite = elite
+
+	if not frame.threat then
+		frame.threat = threat
+	end
 
 	if not frame.hp.value then
 		frame.hp.value = frame.hp:CreateFontString(nil, "OVERLAY")
@@ -624,6 +663,7 @@ local function SkinObjects(frame)
 	frame.cb = cb
 
 	--Highlight
+	overlay:SetParent(frame:GetParent())
 	overlay:SetTexture(1,1,1,0.15)
 	overlay:SetAllPoints(frame.hp)
 	frame.overlay = overlay
@@ -658,28 +698,28 @@ local function SkinObjects(frame)
 	UpdateCastbar(cb)
 
 	frame:HookScript("OnHide", OnHide)
-	frames[frame] = true
+	frames[frame:GetParent()] = true
 	frame.RayUIPlate = true
 end
 
 local function UpdateThreat(frame, elapsed)
 	frame.hp:Show()
-	if frame.hasClass == true then return end
+	if frame.hasClass == true or frame.isTapped == true then return end
 
-	if frame.region:IsShown() then
+	if frame.threat:IsShown() then
 		--Ok we either have threat or we're losing/gaining it
-		local r, g, b = frame.region:GetVertexColor()
+		local r, g, b = frame.threat:GetVertexColor()
 		if g + b == 0 then
 			--Have Threat
 			if R.Role == "Tank" then
 				frame.hp:SetStatusBarColor(goodR, goodG, goodB)
 				frame.hp.hpbg:SetTexture(goodR, goodG, goodB, 0.1)
-				frame.hp.backdrop:SetBackdropBorderColor(0, 0, 0, 1)
+				--frame.hp.backdrop:SetBackdropBorderColor(0, 0, 0, 1)
 				frame.threatStatus = "GOOD"
 			else
 				frame.hp:SetStatusBarColor(badR, badG, badB)
 				frame.hp.hpbg:SetTexture(badR, badG, badB, 0.1)
-				frame.hp.backdrop:SetBackdropBorderColor(badR, badG, badB, 1)
+				--frame.hp.backdrop:SetBackdropBorderColor(badR, badG, badB, 1)
 				frame.threatStatus = "BAD"
 			end
 		else
@@ -687,22 +727,26 @@ local function UpdateThreat(frame, elapsed)
 			if R.Role == "Tank" then
 				if frame.threatStatus == "GOOD" then
 					--Losing Threat
-					frame.hp.backdrop:SetBackdropBorderColor(1, 1, 0, 1)
-					frame.hp.hpbg:SetTexture(1, 1, 0, 0.1)
+					frame.hp:SetStatusBarColor(transitionR2, transitionG2, transitionB2)
+					frame.hp.hpbg:SetTexture(transitionR2, transitionG2, transitionB2, 0.1)
+					--frame.hp.backdrop:SetBackdropBorderColor(badR, badG, badB, 1)
 				else
 					--Gaining Threat
-					frame.hp.backdrop:SetBackdropBorderColor(1, 1, 0, 1)
-					frame.hp.hpbg:SetTexture(1, 1, 0, 0.1)
+					frame.hp:SetStatusBarColor(transitionR, transitionG, transitionB)
+					frame.hp.hpbg:SetTexture(transitionR, transitionG, transitionB, 0.1)
+					--frame.hp.backdrop:SetBackdropBorderColor(0, 0, 0, 1)
 				end
 			else
 				if frame.threatStatus == "GOOD" then
 					--Losing Threat
-					frame.hp.backdrop:SetBackdropBorderColor(1, 1, 0, 1)
-					frame.hp.hpbg:SetTexture(1, 1, 0, 0.1)
+					frame.hp:SetStatusBarColor(transitionR, transitionG, transitionB)
+					frame.hp.hpbg:SetTexture(transitionR, transitionG, transitionB, 0.1)
+					--frame.hp.backdrop:SetBackdropBorderColor(0, 0, 0, 1)
 				else
 					--Gaining Threat
-					frame.hp.backdrop:SetBackdropBorderColor(1, 1, 0, 1)
-					frame.hp.hpbg:SetTexture(1, 1, 0, 0.1)
+					frame.hp:SetStatusBarColor(transitionR2, transitionG2, transitionB2)
+					frame.hp.hpbg:SetTexture(transitionR2, transitionG2, transitionB2, 0.1)
+					--frame.hp.backdrop:SetBackdropBorderColor(badR, badG, badB, 1)
 				end
 			end
 		end
@@ -710,37 +754,23 @@ local function UpdateThreat(frame, elapsed)
 		if InCombatLockdown() and frame.isFriendly ~= true then
 			--No Threat
 			if R.Role == "Tank" then
-				frame.hp.backdrop:SetBackdropBorderColor(1, 0, 0,1)
-				frame.hp.hpbg:SetTexture(badR, badG, badB, 0.1) 
+				frame.hp:SetStatusBarColor(badR, badG, badB)
+				frame.hp.hpbg:SetTexture(badR, badG, badB, 0.1)
+				--frame.hp.backdrop:SetBackdropBorderColor(badR, badG, badB, 1)
 				frame.threatStatus = "BAD"
 			else
-				frame.hp.backdrop:SetBackdropBorderColor(0, 0, 0, 1)
+				frame.hp:SetStatusBarColor(goodR, goodG, goodB)
 				frame.hp.hpbg:SetTexture(goodR, goodG, goodB, 0.1)
+				--frame.hp.backdrop:SetBackdropBorderColor(0, 0, 0, 1)
 				frame.threatStatus = "GOOD"
 			end
 		else
 			--Set colors to their original, not in combat
+			frame.hp:SetStatusBarColor(frame.hp.rcolor, frame.hp.gcolor, frame.hp.bcolor)
 			frame.hp.hpbg:SetTexture(frame.hp.rcolor, frame.hp.gcolor, frame.hp.bcolor, 0.1)
-			frame.hp.backdrop:SetBackdropBorderColor(0, 0, 0, 1)
+			--frame.hp.backdrop:SetBackdropBorderColor(0, 0, 0, 1)
 			frame.threatStatus = nil
 		end
-	end
-end
-
---Create our blacklist for nameplates, so prevent a certain nameplate from ever showing
-local function CheckFilter(frame, ...)
-	if PlateBlacklist[frame.hp.oldname:GetText()] then
-		frame:SetScript("OnUpdate", function() end)
-		frame.hp:Hide()
-		frame.cb:Hide()
-		frame.overlay:Hide()
-		frame.hp.oldlevel:Hide()
-	end
-
-	if BattleGroundHealers[frame.hp.oldname:GetText()] then
-		frame.healerIcon:Show()
-	else
-		frame.healerIcon:Hide()
 	end
 end
 
@@ -753,7 +783,7 @@ end
 
 --Force the name text of a nameplate to be behind other nameplates unless it is our target
 local function AdjustNameLevel(frame, ...)
-	if UnitName("target") == frame.hp.oldname:GetText() and frame:GetAlpha() == 1 then
+	if UnitExists("target") and UnitGUID("target") == frame.guid and frame:GetAlpha() == 1 then
 		frame.hp.name:SetDrawLayer("OVERLAY")
 	else
 		frame.hp.name:SetDrawLayer("ARTWORK")
@@ -774,7 +804,7 @@ local function ShowHealth(frame, ...)
 	frame.hp.value:SetText(string.format("%d%%", math.floor((valueHealth/maxHealth)*100)))
 
 	--Change frame style if the frame is our target or not
-	if UnitName("target") == frame.hp.oldname:GetText() and frame:GetAlpha() == 1 then
+	if UnitExists("target") and UnitGUID("target") == frame.guid and frame:GetAlpha() == 1 then
 		--Targetted Unit
 		frame.hp.name:SetTextColor(1, 1, 1)
 	else
@@ -793,14 +823,20 @@ local function ShowHealth(frame, ...)
 			frame.hp.backdrop:SetBackdropBorderColor(0, 0, 0, 1)
 		end
 	elseif (frame.hasClass ~= true and frame.isFriendly ~= true) then
-		--frame.hp.backdrop:SetBackdropBorderColor(0, 0, 0, 1)
+		frame.hp.backdrop:SetBackdropBorderColor(0, 0, 0, 1)
 	end
+
+	if frame.hp:GetEffectiveScale() < 1 then
+        frame.hp:SetScale(1 / frame.hp:GetParent():GetEffectiveScale())
+        --frame:SetScale(1)
+	end
+    --frame:SetScale(frame.hp:GetScale())
 end
 
 --Scan all visible nameplate for a known unit.
 local function CheckUnit_Guid(frame, ...)
 	--local numParty, numRaid = GetNumSubgroupMembers(), GetNumGroupMembers()
-	if UnitExists("target") and frame:GetAlpha() == 1 and UnitName("target") == frame.hp.oldname:GetText() then
+	if UnitExists("target") and frame:GetParent():GetAlpha() == 1 and UnitName("target") == frame.hp.oldname:GetText() then
 		frame.guid = UnitGUID("target")
 		frame.unit = "target"
 		OnAura(frame, "target")
@@ -828,10 +864,10 @@ local function MatchGUID(frame, destGUID, spellID)
 
 
 	if frame.guid == destGUID then
-		for _,icon in ipairs(frame.icons) do 
-			if icon.spellID == spellID then 
-				icon:Hide() 
-			end 
+		for _,icon in ipairs(frame.icons) do
+			if icon.spellID == spellID then
+				icon:Hide()
+			end
 		end
 	end
 end
@@ -840,7 +876,7 @@ end
 local function ForEachPlate(functionToRun, ...)
 	for frame in pairs(frames) do
 		if frame:IsShown() then
-			functionToRun(frame, ...)
+			functionToRun(select(1,frame:GetChildren()), ...)
 		end
 	end
 end
@@ -850,16 +886,14 @@ local select = select
 local function HookFrames(...)
 	for index = 1, select("#", ...) do
 		local frame = select(index, ...)
-		local region = frame:GetRegions()
 
-		if(not frames[frame] and (frame:GetName() and frame:GetName():find("NamePlate%d")) and region and region:GetObjectType() == "Texture") then
-			SkinObjects(frame)
-			frame.region = region
+		if(not frames[frame] and (frame:GetName() and frame:GetName():find("NamePlate%d"))) then
+			SkinObjects(frame:GetChildren())
 		end
 	end
 end
 
-function NP:COMBAT_LOG_EVENT_UNFILTERED(event, ...)
+function NP:COMBAT_LOG_EVENT_UNFILTERED(_, _, event, ...)
 	if event == "SPELL_AURA_REMOVED" then
 		local _, sourceGUID, _, _, _, destGUID, _, _, _, spellID = ...
 
@@ -876,10 +910,10 @@ function NP:PLAYER_ENTERING_WORLD()
 	SetCVar("ShowClassColorInNameplate", 1)
 	SetCVar("bloatnameplates", 0)
 	if NP.db.combat then
-		if InCombatLockdown() then 
-			SetCVar("nameplateShowEnemies", 1) 
-		else 
-			SetCVar("nameplateShowEnemies", 0) 
+		if InCombatLockdown() then
+			SetCVar("nameplateShowEnemies", 1)
+		else
+			SetCVar("nameplateShowEnemies", 0)
 		end
 	end
 	wipe(BattleGroundHealers)
@@ -921,6 +955,12 @@ function NP:Initialize()
 			HookFrames(WorldFrame:GetChildren())
 		end
 
+		ForEachPlate(ShowHealth)
+		ForEachPlate(HideDrunkenText)
+		ForEachPlate(CheckUnit_Guid)
+		ForEachPlate(CheckSettings)
+		ForEachPlate(UpdateColoring)
+
 		if(self.elapsed and self.elapsed > 0.2) then
 			ForEachPlate(UpdateThreat, self.elapsed)
 			ForEachPlate(AdjustNameLevel)
@@ -929,11 +969,7 @@ function NP:Initialize()
 			self.elapsed = (self.elapsed or 0) + elapsed
 		end
 
-		ForEachPlate(ShowHealth)
 		ForEachPlate(CheckFilter)
-		ForEachPlate(HideDrunkenText)
-		ForEachPlate(CheckUnit_Guid)
-		ForEachPlate(CheckSettings)
 	end)
 end
 

@@ -1,0 +1,7 @@
+## Interface: 50100
+## Title: RaidFinderFix
+## X-Curse-Packaged-Version: 50100-04
+## X-Curse-Project-Name: RaidFinderFix
+## X-Curse-Project-ID: raidfinderfix
+## X-Curse-Repository-ID: wow/raidfinderfix/mainline
+RaidFinderFix.lua
