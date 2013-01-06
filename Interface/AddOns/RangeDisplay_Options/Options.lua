@@ -29,9 +29,9 @@ local FrameStratas = {
 }
 
 local SectionNames = {
-    ["crSection"] = L["Close range section"],--近距离项
-    ["srSection"] = L["Short range section"],--短距离项
-    ["mrSection"] = L["Medium range section"],---中距离项
+    ["crSection"] = L["Close range section"],
+    ["srSection"] = L["Short range section"],
+    ["mrSection"] = L["Medium range section"],
     ["lrSection"] = L["Long range section"],
     ["defaultSection"] = L["Default section"],
     ["oorSection"] = L["Out of range section"],

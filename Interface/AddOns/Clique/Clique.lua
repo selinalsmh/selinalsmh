@@ -354,6 +354,20 @@ local function correctSpec(entry, currentSpec)
 	return true
 end
 
+local function getEntryString(entry)
+	local bits = {}
+	bits[#bits+1] = "type"
+	bits[#bits+1] = tostring(entry.type)
+
+	if entry.type == "spell" then
+		bits[#bits+1] = tostring(entry.spell)
+	elseif entry.type == "macro" and entry.macrotext then
+		bits[#bits+1] = tostring(entry.macrotext)
+	end
+
+	return table.concat(bits, ":")
+end
+
 -- This function takes a single argument indicating if the attributes being
 -- computed are for the special 'global' button used by Clique.  It then
 -- computes the set of attributes necessary for the player's bindings to be
@@ -486,8 +500,14 @@ function addon:GetClickAttributes(global)
                 bits[#bits + 1] = ATTR(indent, prefix, "type", suffix, entry.type)
                 rembits[#rembits + 1] = REMATTR(prefix, "type", suffix)
 			elseif entry.type == "spell" and self.settings.stopcastingfix then
-				-- Implementation of the 'stop casting' fix
-				local macrotext = string.format("/click %s\n/cast [@mouseover] %s", self.stopbutton.name, entry.spell)
+				-- Implement the 'stop casting'f ix
+				local macrotext
+				if entry.sets.global then
+					-- Do not include @mouseover
+					macrotext = string.format("/click %s\n/cast %s", self.stopbutton.name, entry.spell)
+				else
+					macrotext = string.format("/click %s\n/cast [@mouseover] %s", self.stopbutton.name, entry.spell)
+				end
                 bits[#bits + 1] = ATTR(indent, prefix, "type", suffix, "macro")
                 bits[#bits + 1] = ATTR(indent, prefix, "macrotext", suffix, macrotext)
                 rembits[#rembits + 1] = REMATTR(prefix, "type", suffix)
@@ -579,7 +599,7 @@ function addon:GetBindingAttributes(global)
 
     for idx, entry in ipairs(self.bindings) do
 		if entry.key then
-			if shouldApply(global, entry) then
+			if shouldApply(global, entry) and correctSpec(entry, GetActiveSpecGroup()) then
 				if global then
 					-- Allow for the re-binding of clicks and keys, except for
 					-- unmodified left/right-click

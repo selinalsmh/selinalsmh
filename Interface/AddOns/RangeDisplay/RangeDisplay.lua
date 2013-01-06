@@ -10,7 +10,7 @@ License: Public Domain
 
 local AppName, RangeDisplay = ...
 local OptionsAppName = AppName .. "_Options"
-local VERSION = AppName .. "-v4.1.0"
+local VERSION = AppName .. "-v4.1.2"
 --[===[@debug@
 local VERSION = AppName .. "-r" .. ("$Revision: 343 $"):match("%d+")
 --@end-debug@]===]
@@ -123,7 +123,7 @@ local defaults = {
                 strata = "HIGH",
                 enemyOnly = false,
                 warnEnemyOnly = true,
-                reverse = true,
+                reverse = false,
 
                 rangeLimit = 100,
                 overLimitDisplay = false,
@@ -201,7 +201,7 @@ local defaults = {
                 frameWidth = 70,
                 frameHeight = 26,
                 fontSize = 16,
-                mouseAnchor = false,
+                mouseAnchor = true,
                 bg = {
                     bgAutoHide = true,
                 },

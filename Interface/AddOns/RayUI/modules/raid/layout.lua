@@ -112,7 +112,11 @@ local function updateThreat(self, event, unit)
         self.Threat:SetBackdropBorderColor(r, g, b, 1)
         self.border:SetBackdropColor(r, g, b, 1)
     else
-        self.Threat:SetBackdropBorderColor(0, 0, 0, 1)
+		if R.global.general.theme == "Shadow" then
+			self.Threat:SetBackdropBorderColor(0, 0, 0, 1)
+		else
+			self.Threat:SetBackdropBorderColor(0, 0, 0, 0)
+		end
         self.border:SetBackdropColor(0, 0, 0, 1)
     end
     self.Threat:Show()
@@ -174,24 +178,6 @@ local function PostHealth(hp, unit)
 
 		if(b) then
 			hp:SetStatusBarColor(r, g, b, 1)
-		elseif not UnitIsConnected(unit) then
-			local color = colors.disconnected
-			local power = hp.__owner.Power
-			if power then
-				power:SetValue(0)
-				if power.value then
-					power.value:SetText(nil)
-				end
-			end
-		elseif UnitIsDeadOrGhost(unit) then
-			local color = colors.disconnected
-			local power = hp.__owner.Power
-			if power then
-				power:SetValue(0)
-				if power.value then
-					power.value:SetText(nil)
-				end
-			end
 		end
 		if UF.db.smoothColor then
 			if UnitIsDeadOrGhost(unit) or (not UnitIsConnected(unit)) then
@@ -487,7 +473,11 @@ local function style(self)
     threat:SetFrameLevel(0)
     threat:SetBackdrop(glowBorder)
     threat:SetBackdropColor(0, 0, 0, 0)
-    threat:SetBackdropBorderColor(0, 0, 0, 1)
+	if R.global.general.theme == "Shadow" then
+		threat:SetBackdropBorderColor(0, 0, 0, 1)
+	else
+		threat:SetBackdropBorderColor(0, 0, 0, 0)
+	end
     threat.Override = updateThreat
     self.Threat = threat
 
@@ -861,7 +851,7 @@ function RA:SpawnRaid()
 			group:Point(pos, raid15[i-1], posRel, colX or 0, colY or 0)
 		end
 		raid15[i] = group
-        R:CreateMover(group, group:GetName().."Mover", "Raid1-15 Group"..i, nil, nil, "ALL,RAID15")
+        R:CreateMover(group, group:GetName().."Mover", "Raid1-15 Group"..i, nil, nil, "ALL,RAID15", true)
 		group:SetParent(RayUF_Parent)
         RA.Raid15SmartVisibility(group)
 	end
@@ -874,7 +864,7 @@ function RA:SpawnRaid()
 			group:Point(pos, raid25[i-1], posRel, colX or 0, colY or 0)
 		end
 		raid25[i] = group
-        R:CreateMover(group, group:GetName().."Mover", "Raid1-25 Group"..i, nil, nil, "ALL,RAID25,RAID40")
+        R:CreateMover(group, group:GetName().."Mover", "Raid1-25 Group"..i, nil, nil, "ALL,RAID25,RAID40", true)
 		group:SetParent(RayUF_Parent)
         RA.Raid25SmartVisibility(group)
 	end
@@ -888,7 +878,7 @@ function RA:SpawnRaid()
 				group:Point(pos, raid40[i-1], posRel, colX or 0, colY or 0)
 			end
 			raid40[i] = group
-            R:CreateMover(group, group:GetName().."Mover", "Raid1-40 Group"..i, nil, nil, "ALL,RAID40")
+            R:CreateMover(group, group:GetName().."Mover", "Raid1-40 Group"..i, nil, nil, "ALL,RAID40", true)
             group:SetParent(RayUF_Parent)
             RA.Raid40SmartVisibility(group)
 		end

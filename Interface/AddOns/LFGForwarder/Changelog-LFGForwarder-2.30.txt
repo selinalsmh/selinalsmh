@@ -1,0 +1,16 @@
+------------------------------------------------------------------------
+r51 | warbaby | 2012-09-03 07:37:03 +0000 (Mon, 03 Sep 2012) | 1 line
+Changed paths:
+   A /tags/2.30 (from /trunk:50)
+
+Tagging as 2.30
+------------------------------------------------------------------------
+r50 | warbaby | 2012-09-03 07:36:04 +0000 (Mon, 03 Sep 2012) | 3 lines
+Changed paths:
+   M /trunk/LFGForwarder.lua
+   M /trunk/LFGForwarder.toc
+
+- the cycle breaks because of GetNumRaidMembers(), so I have to change the hidden channel name.
+- version number is now 2300, but old versions can't see the update notice. Please tell your friends that there is a new version.
+- not fully tested.
+------------------------------------------------------------------------

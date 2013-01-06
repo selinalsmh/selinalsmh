@@ -37,6 +37,8 @@ local specwarnPheromonesTarget	= mod:NewSpecialWarningTarget(122835, false)
 local specwarnPheromonesYou		= mod:NewSpecialWarningYou(122835)
 local yellPheromones			= mod:NewYell(122835)
 local specwarnPheromonesNear	= mod:NewSpecialWarningClose(122835)
+
+local specwarnCrushH				= mod:NewSpecialWarning("specwarnCrushH")
 local specwarnCrush				= mod:NewSpecialWarningSpell(122774, true, nil, nil, true)--Maybe set to true later, not sure. Some strats on normal involve purposely having tanks rapidly pass debuff and create lots of stomps
 local specwarnLeg				= mod:NewSpecialWarningSwitch("ej6270", mod:IsMelee())--If no legs are up (ie all dead), when one respawns, this special warning can be used to alert of a respawned leg and to switch back.
 local specwarnPheromoneTrail	= mod:NewSpecialWarningMove(123120)--Because this starts doing damage BEFORE the visual is there.
@@ -45,6 +47,7 @@ local specwarnPungency			= mod:NewSpecialWarningStack(123081, mod:IsTank(), 20)
 local specWarnPungencyOtherFix	= mod:NewSpecialWarning("specWarnPungencyOtherFix")
 
 local timerCrush				= mod:NewCastTimer(3.5, 122774)--Was 3 second, hotfix went live after my kill log, don't know what new hotfixed cast time is, 3.5, 4? Needs verification.
+local timerCrushCD				= mod:NewNextCountTimer(37.5, 122774)
 local timerFuriousSwipeCD		= mod:NewCDTimer(8, 122735)
 local timerMendLegCD			= mod:NewCDTimer(30, 123495)
 local timerFury					= mod:NewBuffActiveTimer(30, 122754)
@@ -55,9 +58,11 @@ local berserkTimer				= mod:NewBerserkTimer(420)
 --mod:AddBoolOption("InfoFrame", true)--Not sure how to do yet, i need to see 25 man first to get a real feel for number of people with debuff at once.
 mod:AddBoolOption("PheromonesIcon", true)
 local sndFS		= mod:NewSound(nil, "SoundFS", mod:IsTank())
+local sndZN		= mod:NewSound(nil, "SoundZN", mod:IsHealer())
 mod:AddBoolOption("InfoFrame", not mod:IsDps(), "sound")
 
 local brokenLegs = 0
+local Crushcount = 0
 --local Pn = 20
 
 mod:AddBoolOption("HudMAP", true, "sound")
@@ -74,6 +79,7 @@ local PheromonesMarkers = {}
 
 function mod:OnCombatStart(delay)
 	brokenLegs = 0
+	Crushcount = 0
 	timerFuriousSwipeCD:Start(-delay)--8-11 sec on pull
 	if not self:IsDifficulty("lfr25") then
 		berserkTimer:Start(-delay)
@@ -81,7 +87,15 @@ function mod:OnCombatStart(delay)
 	sndFS:Schedule(5, "Interface\\AddOns\\DBM-Core\\extrasounds\\countthree.mp3")
 	sndFS:Schedule(6, "Interface\\AddOns\\DBM-Core\\extrasounds\\counttwo.mp3")
 	sndFS:Schedule(7, "Interface\\AddOns\\DBM-Core\\extrasounds\\countone.mp3")
-	table.wipe(PheromonesMarkers)
+	table.wipe(PheromonesMarkers)	
+	if self:IsDifficulty("heroic10", "heroic25") then
+		timerCrushCD:Start(30-delay, Crushcount + 1)
+		sndZN:Schedule(25.5, "Interface\\AddOns\\DBM-Core\\extrasounds\\countfive.mp3")
+		sndZN:Schedule(26.5, "Interface\\AddOns\\DBM-Core\\extrasounds\\countfour.mp3")
+		sndZN:Schedule(27.5, "Interface\\AddOns\\DBM-Core\\extrasounds\\countthree.mp3")
+		sndZN:Schedule(28.5, "Interface\\AddOns\\DBM-Core\\extrasounds\\counttwo.mp3")
+		sndZN:Schedule(29.5, "Interface\\AddOns\\DBM-Core\\extrasounds\\countone.mp3")
+	end
 end
 
 function mod:OnCombatEnd()
@@ -96,7 +110,11 @@ end
 function mod:SPELL_AURA_APPLIED(args)
 	if args:IsSpellID(122754) and args:GetDestCreatureID() == 63191 then--It applies to both creatureids, so we antispam it
 		warnFury:Show(args.destName, args.amount or 1)
-		timerFury:Start()
+		if self:IsDifficulty("lfr25") then
+			timerFury:Start(15)
+		else
+			timerFury:Start()
+		end
 	elseif args:IsSpellID(122786) and args:GetDestCreatureID() == 63191 then--This one also hits both the leg and the boss, so filter second one here as well.
 		-- this warn seems not works? needs review.
 		warnBrokenLeg:Show(args.destName, args.amount or 1)
@@ -216,13 +234,28 @@ mod.SPELL_MISSED = mod.SPELL_DAMAGE
 
 function mod:CHAT_MSG_RAID_BOSS_EMOTE(msg, _, _, _, target)
 	if msg:find("spell:122774") then
+		Crushcount = Crushcount + 1
 		warnCrush:Show()
-		specwarnCrush:Show()
+		specwarnCrushH:Show(Crushcount)
 		sndWOP:Play("Interface\\AddOns\\DBM-Core\\extrasounds\\ex_mop_nyjd.mp3") --碾壓
 		timerCrush:Start()
 		if msg:find(L.UnderHim) and target == UnitName("player") then
 			specwarnUnder:Show()--it's a bit of a too little too late warning, but hopefully it'll help people in LFR understand it's not place to be and less likely to repeat it, eventually thining out LFR failure rate to this.
 			sndWOP:Play("Interface\\AddOns\\DBM-Core\\extrasounds\\ex_mop_lkzq.mp3") --離開紫圈
+		end
+		if msg:find(L.Heroicrush) then
+			timerCrushCD:Cancel()
+			sndZN:Cancel("Interface\\AddOns\\DBM-Core\\extrasounds\\countfive.mp3")
+			sndZN:Cancel("Interface\\AddOns\\DBM-Core\\extrasounds\\countfour.mp3")
+			sndZN:Cancel("Interface\\AddOns\\DBM-Core\\extrasounds\\countthree.mp3")
+			sndZN:Cancel("Interface\\AddOns\\DBM-Core\\extrasounds\\counttwo.mp3")
+			sndZN:Cancel("Interface\\AddOns\\DBM-Core\\extrasounds\\countone.mp3")
+			timerCrushCD:Start(37.5, Crushcount + 1)
+			sndZN:Schedule(33, "Interface\\AddOns\\DBM-Core\\extrasounds\\countfive.mp3")
+			sndZN:Schedule(34, "Interface\\AddOns\\DBM-Core\\extrasounds\\countfour.mp3")
+			sndZN:Schedule(35, "Interface\\AddOns\\DBM-Core\\extrasounds\\countthree.mp3")
+			sndZN:Schedule(36, "Interface\\AddOns\\DBM-Core\\extrasounds\\counttwo.mp3")
+			sndZN:Schedule(37, "Interface\\AddOns\\DBM-Core\\extrasounds\\countone.mp3")
 		end
 	end
 end

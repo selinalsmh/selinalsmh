@@ -74,8 +74,9 @@ end
 
 function A:UpdateWeapon(button)
 	if not button.shadow then
-		button:Size(buttonsize -8, buttonsize-8)
+		button:Size(buttonsize, buttonsize)
 		button:CreateShadow("Background")
+		button.shadow:SetBackdropColor(0, 0, 0)
 		button.border:SetBackdropBorderColor(137/255, 0, 191/255)
 
 		button.time = _G[button:GetName().."Duration"]
@@ -117,6 +118,7 @@ function A:UpdateAuras(header, button)
 		end)
 
 		button:CreateShadow("Background")
+		button.shadow:SetBackdropColor(0, 0, 0)
 
 		button.highlight = button:CreateTexture(nil, "HIGHLIGHT")
 		button.highlight:SetTexture(1,1,1,0.45)
@@ -283,7 +285,7 @@ function A:Initialize()
 	AurasHolder:SetFrameStrata("BACKGROUND")
 	AurasHolder:SetClampedToScreen(true)
 	AurasHolder:SetAlpha(0)
-	AurasHolder:Point("TOPRIGHT", UIParent, "TOPRIGHT", -14, -35)
+	AurasHolder:Point("TOPRIGHT", UIParent, "TOPRIGHT", -14, -73)
 	R:CreateMover(AurasHolder, "AurasMover", L["Buff锚点"], true, A.PostDrag)
 
 	self.BuffFrame = self:CreateAuraHeader("HELPFUL")
@@ -296,8 +298,8 @@ function A:Initialize()
 	self.AlphaFrame:SetScript("OnUpdate", A.UpdateAlpha)
 
 	self.EnchantHeader = CreateFrame("Frame", "RayUITemporaryEnchantFrame", UIParent, "SecureHandlerStateTemplate");
-	self.EnchantHeader:Size((buttonsize - 8) * 2 + spacing, buttonsize - 8)
-	self.EnchantHeader:Point("TOPLEFT", Minimap, "BOTTOMLEFT", 0, -30)
+	self.EnchantHeader:Size(buttonsize * 2 + spacing, buttonsize)
+	self.EnchantHeader:Point("TOPLEFT", Minimap, "BOTTOMLEFT", 0, -5)
 	self.EnchantHeader:SetAttribute("_onstate-show", [[
 			if newstate == "hide" then
 				self:Hide();

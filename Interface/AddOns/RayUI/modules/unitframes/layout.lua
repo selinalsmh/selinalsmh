@@ -139,15 +139,16 @@ function UF:DPSLayout(frame, unit)
 			local power = self:ConstructPowerBar(frame, true, true)
 			power:SetPoint("LEFT")
 			power:SetPoint("RIGHT")
-			power:SetPoint("BOTTOM") 
+			power:SetPoint("BOTTOM")
 			power.value:Point("RIGHT", health, "RIGHT", -5, 0)
 			power:SetWidth(PLAYER_WIDTH)
 			power:SetHeight(PLAYER_HEIGHT * self.db.powerheight)
 			power:CreateShadow("Background")
 			frame.Power = power
 		end
-
-        frame.Portrait = self:ConstructPortrait(frame)
+		if self.db.showPortrait then
+        	frame.Portrait = self:ConstructPortrait(frame)
+        end
 
 		-- Vengeance Bar
 		if self.db.vengeance then
@@ -348,14 +349,16 @@ function UF:DPSLayout(frame, unit)
 		local power = self:ConstructPowerBar(frame, true, true)
 		power:SetPoint("LEFT")
 		power:SetPoint("RIGHT")
-		power:SetPoint("BOTTOM") 
+		power:SetPoint("BOTTOM")
 		power.value:Point("RIGHT", health, "RIGHT", -5, 0)
 		power:SetWidth(PLAYER_WIDTH)
 		power:SetHeight(PLAYER_HEIGHT * self.db.powerheight)
 		power:CreateShadow("Background")
 		frame.Power = power
 
-        frame.Portrait = self:ConstructPortrait(frame)
+        if self.db.showPortrait then
+        	frame.Portrait = self:ConstructPortrait(frame)
+        end
 
 		local castbar = self:ConstructCastBar(frame)
 		castbar:ClearAllPoints()
@@ -497,14 +500,16 @@ function UF:DPSLayout(frame, unit)
 		local power = self:ConstructPowerBar(frame, true, true)
 		power:SetPoint("LEFT")
 		power:SetPoint("RIGHT")
-		power:SetPoint("BOTTOM") 
+		power:SetPoint("BOTTOM")
 		power.value:Point("RIGHT", health, "RIGHT", -5, 0)
 		power:SetWidth(PLAYER_WIDTH)
 		power:SetHeight(PLAYER_HEIGHT * self.db.powerheight)
 		power:CreateShadow("Background")
 		frame.Power = power
 
-        frame.Portrait = self:ConstructPortrait(frame)
+        if self.db.showPortrait then
+        	frame.Portrait = self:ConstructPortrait(frame)
+        end
 	end
 
 	if unit == "party" then
@@ -647,14 +652,16 @@ function UF:DPSLayout(frame, unit)
 		local power = self:ConstructPowerBar(frame, true, true)
 		power:SetPoint("LEFT")
 		power:SetPoint("RIGHT")
-		power:SetPoint("BOTTOM") 
+		power:SetPoint("BOTTOM")
 		power.value:Point("RIGHT", frame, "RIGHT", -5, 0)
 		power:SetWidth(BOSS_WIDTH)
 		power:SetHeight(BOSS_HEIGHT * self.db.powerheight)
 		power:CreateShadow("Background")
 		frame.Power = power
 
-        frame.Portrait = self:ConstructPortrait(frame)
+        if self.db.showPortrait then
+        	frame.Portrait = self:ConstructPortrait(frame)
+        end
 
 		local debuffs = CreateFrame("Frame", nil, frame)
 		debuffs:SetHeight(BOSS_HEIGHT)
@@ -686,37 +693,47 @@ function UF:DPSLayout(frame, unit)
 		frame.Castbar = castbar
 	end
 
-	if (unit and unit:find("boss%d") and self.db.showBossFrames == true) then
-		-- Alternative Power Bar
-		local altpp = CreateFrame("StatusBar", nil, frame)
-		altpp:SetStatusBarTexture(R["media"].normal)
-		altpp:GetStatusBarTexture():SetHorizTile(false)
-		altpp:SetFrameStrata("LOW")
-		altpp:SetHeight(4)
-		altpp:Point("TOPLEFT", frame, "BOTTOMLEFT", 0, -2)
-		altpp:Point("TOPRIGHT", frame, "BOTTOMRIGHT", 0, -2)
-		altpp.bg = altpp:CreateTexture(nil, "BORDER")
-		altpp.bg:SetAllPoints(altpp)
-		altpp.bg:SetTexture(R["media"].normal)
-		altpp.bg:SetVertexColor( 0,  0.76, 1)
-		altpp.bd = self:CreateBackdrop(altpp, altpp)
-		altpp.text = altpp:CreateFontString(nil, "OVERLAY")
-		altpp.text:SetFont(R["media"].font, 12, R["media"].fontflag)
-		altpp.text:SetPoint("CENTER")
-		altpp.PostUpdate = self.PostAltUpdate
-		frame.AltPowerBar = altpp
-	end
-
 	if (unit and unit:find("arena%d") and self.db.showArenaFrames == true) then
+        if not frame.prepFrame then
+            frame.prepFrame = CreateFrame("Frame", frame:GetName().."PrepFrame", UIParent)
+            frame.prepFrame:SetFrameStrata("BACKGROUND")
+            frame.prepFrame:SetAllPoints(frame)
+            frame.prepFrame.Health = CreateFrame("StatusBar", nil, frame.prepFrame)
+            frame.prepFrame.Health:SetStatusBarTexture(R["media"].normal)
+            frame.prepFrame.Health:SetAllPoints()
+            frame.prepFrame.Health:CreateShadow("Background")
+
+            frame.prepFrame.Icon = frame.prepFrame:CreateTexture(nil, "OVERLAY")
+            frame.prepFrame.Icon.bg = CreateFrame("Frame", nil, frame.prepFrame)
+            frame.prepFrame.Icon.bg:SetHeight(BOSS_HEIGHT)
+            frame.prepFrame.Icon.bg:SetWidth(BOSS_HEIGHT)
+            frame.prepFrame.Icon.bg:SetPoint("LEFT", frame.prepFrame, "RIGHT", 5, 0)
+            frame.prepFrame.Icon.bg:CreateShadow("Background")
+            frame.prepFrame.Icon:SetParent(frame.prepFrame.Icon.bg)
+            frame.prepFrame.Icon:SetTexCoord(.08, .92, .08, .92)
+            frame.prepFrame.Icon:SetAllPoints(frame.prepFrame.Icon.bg)
+
+            frame.prepFrame.SpecClass = frame.prepFrame.Health:CreateFontString(nil, "OVERLAY")
+            frame.prepFrame.SpecClass:SetPoint("CENTER")
+            frame.prepFrame.SpecClass:SetFont(R["media"].font, 12, R["media"].fontflag)
+        end
+
+        local specIcon = CreateFrame("Frame", nil, frame)
+		specIcon:SetHeight(BOSS_HEIGHT)
+		specIcon:SetWidth(BOSS_HEIGHT)
+		specIcon:SetPoint("LEFT", frame, "RIGHT", 5, 0)
+        specIcon:CreateShadow("Background")
+        frame.PVPSpecIcon = specIcon
+
 		local trinkets = CreateFrame("Frame", nil, frame)
 		trinkets:SetHeight(BOSS_HEIGHT)
 		trinkets:SetWidth(BOSS_HEIGHT)
-		trinkets:SetPoint("LEFT", frame, "RIGHT", 5, 0)
+		trinkets:SetPoint("LEFT", specIcon, "RIGHT", 5, 0)
 		trinkets:CreateShadow("Background")
 		trinkets.shadow:SetFrameStrata("BACKGROUND")
-		trinkets.trinketUseAnnounce = true
-		trinkets.trinketUpAnnounce = true
-		frame.Trinket = trinkets
+        trinkets.trinketUseAnnounce = true
+        trinkets.trinketUpAnnounce = true
+        frame.Trinket = trinkets
 	end
 
     local leader = frame:CreateTexture(nil, "OVERLAY")
@@ -786,13 +803,13 @@ function UF:DPSLayout(frame, unit)
 	tinsert(frame.mouseovers, frame.Health)
 
 	if frame.Power then
-		if frame.Power.value then 
+		if frame.Power.value then
 			tinsert(frame.mouseovers, frame.Power)
 		end
 	end
 end
 
-function UF:LoadDPSLayout()
+function UF:LoadUnitFrames()
 	oUF:RegisterStyle("RayUF", function(frame, unit)
 		UF:DPSLayout(frame, unit)
 	end)
@@ -846,7 +863,7 @@ function UF:LoadDPSLayout()
 
 	if self.db.showArenaFrames and not IsAddOnLoaded("Gladius") then
         local ArenaHeader = CreateFrame("Frame", nil, UIParent)
-        ArenaHeader:Point("TOPRIGHT", RayUF_Parent, "RIGHT", -80, 200)
+        ArenaHeader:Point("TOPRIGHT", RayUF_Parent, "RIGHT", -110, 200)
         ArenaHeader:Width(BOSS_WIDTH)
         ArenaHeader:Height(R:Scale(BOSS_HEIGHT)*5 + R:Scale(36)*4)
 		local arena = {}
@@ -874,13 +891,14 @@ function UF:LoadDPSLayout()
 			if i == 1 then
 				boss[i]:Point("TOPRIGHT", BossHeader, "TOPRIGHT", 0, 0)
 			else
-				boss[i]:Point("TOP", boss[i-1], "BOTTOM", 0, -36)             
+				boss[i]:Point("TOP", boss[i-1], "BOTTOM", 0, -36)
 			end
 			boss[i]:Size(BOSS_WIDTH, BOSS_HEIGHT)
 			boss[i]:SetParent(RayUF_Parent)
 		end
         R:CreateMover(BossHeader, "BossHeaderMover", "Boss Frames", nil, nil, "ALL,RAID15,RAID25,RAID40")
 	end
+    self:RegisterEvent("ARENA_PREP_OPPONENT_SPECIALIZATIONS", "UpdatePrep")
+    self:RegisterEvent("ARENA_OPPONENT_UPDATE", "UpdatePrep")
+    self:RegisterEvent("PLAYER_ENTERING_WORLD", "UpdatePrep")
 end
-
-UF.Layouts["DPS"] = UF.LoadDPSLayout

@@ -24,25 +24,6 @@ local function ColorGradient(perc, color1, color2, color3)
 	return r2 + (r3-r2)*relperc, g2 + (g3-g2)*relperc, b2 + (b3-b2)*relperc
 end
 
-function UF:CreateBackdrop(parent, anchor) 
-    local frame = CreateFrame("Frame", nil, parent)
-    frame:SetFrameStrata("BACKGROUND")
-    frame:SetFrameLevel(0)
-
-	frame:Point("TOPLEFT", anchor, "TOPLEFT", -4, 4)
-	frame:Point("BOTTOMRIGHT", anchor, "BOTTOMRIGHT", 4, -4)
-	frame:SetBackdrop({
-		edgeFile = R["media"].glow, edgeSize = R:Scale(5),
-		bgFile = R["media"].blank,
-		insets = {left = R:Scale(3), right = R:Scale(3), top = R:Scale(3), bottom = R:Scale(3)}
-	})
-
-    frame:SetBackdropColor(0.1, 0.1, 0.1)
-    frame:SetBackdropBorderColor(0, 0, 0)
-
-    return frame
-end
-
 function UF:SpawnMenu()
 	local unit = self.unit:gsub("(.)", string.upper, 1)
 	if self.unit == "targettarget" then return end
@@ -186,7 +167,7 @@ function UF:ConstructCastBar(frame)
 	spark:Point("BOTTOMRIGHT", castbar:GetStatusBarTexture(), "BOTTOMRIGHT", 10, -13)
 	castbar.Spark = spark
 
-	castbar.shadow = UF:CreateBackdrop(castbar, castbar)
+	castbar:CreateShadow("Background")
 	castbar.bg = castbar:CreateTexture(nil, "BACKGROUND")
 	castbar.bg:SetTexture(R["media"].normal)
 	castbar.bg:SetAllPoints(true)
@@ -200,8 +181,8 @@ function UF:ConstructCastBar(frame)
 	castbar.Time:SetPoint("BOTTOMRIGHT", castbar, "TOPRIGHT", -5, -2)
 	castbar.Iconbg = CreateFrame("Frame", nil ,castbar)
 	castbar.Iconbg:SetPoint("BOTTOMRIGHT", castbar, "BOTTOMLEFT", -5, 0)
-	castbar.Iconbg:SetSize(21, 21)
-	UF:CreateBackdrop(castbar.Iconbg, castbar.Iconbg)
+	castbar.Iconbg:SetSize(20, 20)
+	castbar.Iconbg:CreateShadow("Background")
 	castbar.Icon = castbar:CreateTexture(nil, "OVERLAY")
 	castbar.Icon:SetAllPoints(castbar.Iconbg)
 	castbar.Icon:SetTexCoord(0.07, 0.93, 0.07, 0.93)
@@ -757,6 +738,8 @@ function UF:PostUpdateIcon(unit, icon, index, offset)
 			icon.border:SetBackdropBorderColor(237/255, 234/255, 142/255)
 			icon:GetHighlightTexture():StyleButton(1)
 			texture:StyleButton(1)
+			texture:Point("TOPLEFT", icon, 1, -1)
+			texture:Point("BOTTOMRIGHT", icon, -1, 1)
 		else
 			icon:GetHighlightTexture():StyleButton(true)
 			icon.border:SetBackdropBorderColor(unpack(R["media"].bordercolor))
@@ -1327,6 +1310,46 @@ function UF:Construct_AuraBarHeader(frame)
     auraBar.buffColor = RayUF.colors.class[R.myclass]
 	
 	return auraBar
+end
+
+function UF:UpdatePrep(event)
+    if event == "ARENA_OPPONENT_UPDATE" then
+        for i=1, 5 do
+            if not _G["RayUFArena"..i] then return end
+            _G["RayUFArena"..i].prepFrame:Hide()
+        end
+    else
+        local numOpps = GetNumArenaOpponentSpecs()
+
+        if numOpps > 0 then
+            for i=1, 5 do
+                if not _G["RayUFArena"..i] then return end
+                local s = GetArenaOpponentSpec(i)
+                local _, spec, class, texture = nil, "UNKNOWN", "UNKNOWN", [[INTERFACE\ICONS\INV_MISC_QUESTIONMARK]]
+
+                if s and s > 0 then
+                    _, spec, _, texture, _, _, class = GetSpecializationInfoByID(s)
+                end
+
+                if (i <= numOpps) then
+                    if class and spec then
+                        local color = RAID_CLASS_COLORS[class]
+                        _G["RayUFArena"..i].prepFrame.SpecClass:SetText(spec.."  -  "..LOCALIZED_CLASS_NAMES_MALE[class])
+                        _G["RayUFArena"..i].prepFrame.Health:SetStatusBarColor(color.r, color.g, color.b)
+                        _G["RayUFArena"..i].prepFrame.Icon:SetTexture(texture)
+                        _G["RayUFArena"..i].prepFrame:Show()
+                    end
+                else
+                    _G["RayUFArena"..i].prepFrame:Hide()
+                end
+            end
+        else
+            for i=1, 5 do
+                if not _G["RayUFArena"..i] then return end
+                _G["RayUFArena"..i].prepFrame:Hide()
+            end
+        end
+    end
 end
 
 local attributeBlacklist = {["showplayer"] = true, ["showraid"] = true, ["showparty"] = true, ["showsolo"] = true}

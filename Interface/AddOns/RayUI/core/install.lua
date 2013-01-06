@@ -87,8 +87,16 @@ function R:SetLayout(layout)
 		StaticPopup_Show("CFG_RELOAD")
 	elseif layout == "default" then
 		R:ResetMovers()
-		R.db.Raid.horizontal = false
-		StaticPopup_Show("CFG_RELOAD")
+		R.db.movers = {}
+		R.db.movers.ArenaHeaderMover = "TOPLEFTUIParentBOTTOM450460"
+		R.db.movers.BossHeaderMover = "TOPLEFTUIParentBOTTOM450460"
+		R.db.movers.RayUF_focusMover = "BOTTOMRIGHTRayUF_playerTOPLEFT-2050"
+		R.db.movers.RayUFRaid15_1Mover = "BOTTOMLEFTUIParentBOTTOMLEFT15235"
+		R.db.movers.RayUFRaid25_1Mover = "BOTTOMLEFTUIParentBOTTOMLEFT15235"
+		R.db.movers.RayUFRaid40_6Mover = "BOTTOMLEFTRayUFRaid25_1MoverTOPLEFT0"..R.db.Raid.spacing
+		R.db.movers.ActionBar5Mover = "TOPRIGHTActionBar4MoverTOPLEFT"..-R.db.ActionBar.buttonspacing.."0"
+		R.db.movers.ActionBar1Mover = "BOTTOMUIParentBOTTOM"..(-3*R.db.ActionBar.buttonsize-3*R.db.ActionBar.buttonspacing).."40"
+		R.db.movers.AltPowerBarMover = "BOTTOMUIParentBOTTOM0130"
 	end
 	R:SetMoversPositions()
     for i = 1, 5 do

@@ -169,7 +169,7 @@ function Fatality:FormatOutput(guid)
 				info = format("%s %s%s%s%s%s", amount, school, ability, #extra > 0 and format(" (%s)", concat(extra, ", ")) or "", e.crit and format(" %s", L.damage_critical) or "", source)
 			else
 				-- ENVIRONMENTAL_DAMAGE
-				info = format("%s %s", amount, _G["ACTION_ENVIRONMENTAL_DAMAGE_"..ability])
+				info = format("%s %s", amount, ability)
 			end
 		else
 			-- SPELL_INSTAKILL

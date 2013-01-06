@@ -14,12 +14,12 @@ NS.Version = GetAddOnMetadata( ..., "Version" ):match( "^([%d.]+)" );
 
 NS.Options = {
 	Version = NS.Version;
+	Achievements = {};
 };
 NS.OptionsCharacter = {
 	Version = NS.Version;
 	NPCs = {};
 	NPCWorldIDs = {};
-	Achievements = {};
 };
 
 NS.OptionsDefault = {
@@ -28,6 +28,11 @@ NS.OptionsDefault = {
 	AchievementsAddFound = nil;
 	AlertSoundUnmute = nil;
 	AlertSound = nil; -- Default sound
+	Achievements = {
+		[ 1312 ] = true; -- Bloody Rare (Outlands)
+		[ 2257 ] = true; -- Frostbitten (Northrend)
+		[ 7439 ] = true; -- Glorious! (Pandaria)
+	};
 };
 
 do
@@ -83,6 +88,7 @@ do
 			[ 54323 ] = L.NPCs[ 54323 ]; -- Kirix
 			[ 54324 ] = L.NPCs[ 54324 ]; -- Skitterflame
 			[ 54338 ] = L.NPCs[ 54338 ]; -- Anthriss
+			[ 62346 ] = L.NPCs[ 62346 ]; -- Galleon
 		};
 		NPCWorldIDs = {
 			[ 18684 ] = 3; -- Bro'Gaz the Clanless
@@ -132,11 +138,7 @@ do
 			[ 54323 ] = MOLTEN_FRONT; -- Kirix
 			[ 54324 ] = MOLTEN_FRONT; -- Skitterflame
 			[ 54338 ] = MOLTEN_FRONT; -- Anthriss
-		};
-		Achievements = {
-			[ 1312 ] = true; -- Bloody Rare (Outlands)
-			[ 2257 ] = true; -- Frostbitten (Northrend)
-			[ 7439 ] = true; -- Glorious! (Pandaria)
+			[ 62346 ] = 6; -- Galleon
 		};
 	};
 end
@@ -228,7 +230,7 @@ do
 		for NpcID in pairs( NS.OptionsCharacter.NPCs ) do
 			self[ NpcID ] = NS.TestID( NpcID );
 		end
-		for AchievementID in pairs( NS.OptionsCharacter.Achievements ) do
+		for AchievementID in pairs( NS.Options.Achievements ) do
 			for CriteriaID, NpcID in pairs( NS.Achievements[ AchievementID ].Criteria ) do
 				if ( NS.Options.AchievementsAddFound or not select( 3, GetAchievementCriteriaInfoByID( AchievementID, CriteriaID ) ) ) then -- Not completed
 					self[ NpcID ] = NS.TestID( NpcID );
@@ -338,11 +340,11 @@ end
 -- @return True if custom NPC added.
 function NS.NPCAdd ( NpcID, Name, WorldID )
 	NpcID = assert( tonumber( NpcID ), "NpcID must be numeric." );
-	local Options = NS.OptionsCharacter;
-	if ( not Options.NPCs[ NpcID ] ) then
+	local OptionsCharacter = NS.OptionsCharacter;
+	if ( not OptionsCharacter.NPCs[ NpcID ] ) then
 		assert( type( Name ) == "string", "Name must be a string." );
 		assert( WorldID == nil or type( WorldID ) == "string" or type( WorldID ) == "number", "Invalid WorldID." );
-		Options.NPCs[ NpcID ], Options.NPCWorldIDs[ NpcID ] = Name, WorldID;
+		OptionsCharacter.NPCs[ NpcID ], OptionsCharacter.NPCWorldIDs[ NpcID ] = Name, WorldID;
 		if ( not NPCActivate( NpcID, WorldID ) ) then -- Didn't activate
 			NS.Config.Search.UpdateTab( "NPC" ); -- Just add row
 		end
@@ -354,9 +356,9 @@ end
 -- @return True if custom NPC removed.
 function NS.NPCRemove ( NpcID )
 	NpcID = tonumber( NpcID );
-	local Options = NS.OptionsCharacter;
-	if ( Options.NPCs[ NpcID ] ) then
-		Options.NPCs[ NpcID ], Options.NPCWorldIDs[ NpcID ] = nil;
+	local OptionsCharacter = NS.OptionsCharacter;
+	if ( OptionsCharacter.NPCs[ NpcID ] ) then
+		OptionsCharacter.NPCs[ NpcID ], OptionsCharacter.NPCWorldIDs[ NpcID ] = nil;
 		if ( not NPCDeactivate( NpcID ) ) then -- Wasn't active
 			NS.Config.Search.UpdateTab( "NPC" ); -- Just remove row
 		end
@@ -418,12 +420,12 @@ end
 function NS.AchievementAdd ( AchievementID )
 	AchievementID = assert( tonumber( AchievementID ), "AchievementID must be numeric." );
 	local Achievement = NS.Achievements[ AchievementID ];
-	if ( Achievement and not NS.OptionsCharacter.Achievements[ AchievementID ] ) then
-		if ( not next( NS.OptionsCharacter.Achievements ) ) then -- First
+	if ( Achievement and not NS.Options.Achievements[ AchievementID ] ) then
+		if ( not next( NS.Options.Achievements ) ) then -- First
 			NS.Frame:RegisterEvent( "ACHIEVEMENT_EARNED" );
 			NS.Frame:RegisterEvent( "CRITERIA_UPDATE" );
 		end
-		NS.OptionsCharacter.Achievements[ AchievementID ] = true;
+		NS.Options.Achievements[ AchievementID ] = true;
 		NS.Config.Search.AchievementSetEnabled( AchievementID, true );
 		AchievementActivate( Achievement );
 		return true;
@@ -433,10 +435,10 @@ end
 -- @param AchievementID  Numeric ID of achievement.
 -- @return True if achievement removed.
 function NS.AchievementRemove ( AchievementID )
-	if ( NS.OptionsCharacter.Achievements[ AchievementID ] ) then
+	if ( NS.Options.Achievements[ AchievementID ] ) then
 		AchievementDeactivate( NS.Achievements[ AchievementID ] );
-		NS.OptionsCharacter.Achievements[ AchievementID ] = nil;
-		if ( not next( NS.OptionsCharacter.Achievements ) ) then -- Last
+		NS.Options.Achievements[ AchievementID ] = nil;
+		if ( not next( NS.Options.Achievements ) ) then -- Last
 			NS.Frame:UnregisterEvent( "ACHIEVEMENT_EARNED" );
 			NS.Frame:UnregisterEvent( "CRITERIA_UPDATE" );
 		end
@@ -536,7 +538,7 @@ function NS.Synchronize ( Options, OptionsCharacter )
 	end
 
 	-- Clear all scans
-	for AchievementID in pairs( NS.OptionsCharacter.Achievements ) do
+	for AchievementID in pairs( NS.Options.Achievements ) do
 		NS.AchievementRemove( AchievementID );
 	end
 	for NpcID in pairs( NS.OptionsCharacter.NPCs ) do
@@ -559,7 +561,7 @@ function NS.Synchronize ( Options, OptionsCharacter )
 	end
 	for AchievementID in pairs( NS.Achievements ) do
 		-- If defaults, don't enable completed achievements unless explicitly allowed
-		if ( OptionsCharacter.Achievements[ AchievementID ] and (
+		if ( Options.Achievements[ AchievementID ] and (
 			not IsDefaultScan or Options.AchievementsAddFound or not select( 4, GetAchievementInfo( AchievementID ) ) -- Not completed
 		) ) then
 			NS.AchievementAdd( AchievementID );
@@ -622,11 +624,24 @@ do
 		SetMapByID( ZoneIDBackup ); -- Restore previous map view
 		return InCorrectZone, InvalidReason;
 	end
+	--- @return Name of the source of NpcID's scan--either a custom name or achievement name.
+	local function GetScanSource ( NpcID )
+		local CustomName = NS.OptionsCharacter.NPCs[ NpcID ];
+		if ( CustomName ) then
+			return CustomName;
+		end
+		-- Must have been from an achievement
+		for AchievementID in pairs( NS.Options.Achievements ) do
+			if ( NS.Achievements[ AchievementID ].NPCsActive[ NpcID ] ) then
+				return GetAchievementLink( AchievementID ); -- Colored link to distinguish from a custom name
+			end
+		end
+	end
 	--- Validates found mobs before showing alerts.
 	local function OnFound ( NpcID, Name )
 		-- Disable active scans
 		NPCDeactivate( NpcID );
-		for AchievementID in pairs( NS.OptionsCharacter.Achievements ) do
+		for AchievementID in pairs( NS.Options.Achievements ) do
 			AchievementNPCDeactivate( NS.Achievements[ AchievementID ], NpcID );
 		end
 
@@ -638,7 +653,7 @@ do
 
 		if ( Valid ) then
 			NS.Print( L[ Tamable and "FOUND_TAMABLE_FORMAT" or "FOUND_FORMAT" ]:format( Name ), GREEN_FONT_COLOR );
-			NS.Button:SetNPC( NpcID, Name ); -- Sends added and found overlay messages
+			NS.Button:SetNPC( NpcID, Name, GetScanSource( NpcID ) ); -- Sends added and found overlay messages
 		elseif ( InvalidReason ) then
 			NS.Print( InvalidReason );
 		end
@@ -649,7 +664,7 @@ do
 	--- Scans all active criteria and removes any completed NPCs.
 	local function AchievementCriteriaUpdate ()
 		if ( not NS.Options.AchievementsAddFound ) then
-			for AchievementID in pairs( NS.OptionsCharacter.Achievements ) do
+			for AchievementID in pairs( NS.Options.Achievements ) do
 				local Achievement = NS.Achievements[ AchievementID ];
 				for NpcID, CriteriaID in pairs( Achievement.NPCsActive ) do
 					local _, _, Complete = GetAchievementCriteriaInfoByID( AchievementID, CriteriaID );
@@ -692,7 +707,7 @@ if ( select( 2, UnitClass( "player" ) ) == "HUNTER" ) then
 			if ( Name ) then
 				StabledList[ NpcID ] = Name;
 				NPCDeactivate( NpcID );
-				for AchievementID in pairs( NS.OptionsCharacter.Achievements ) do
+				for AchievementID in pairs( NS.Options.Achievements ) do
 					AchievementNPCDeactivate( NS.Achievements[ AchievementID ], NpcID );
 				end
 			end
@@ -717,10 +732,10 @@ if ( select( 2, UnitClass( "player" ) ) == "HUNTER" ) then
 	NS.Frame:RegisterEvent( "PET_STABLE_UPDATE" );
 
 	local Backup = GetStablePetInfo;
-	--- Prevents the pet UI from querying (and caching) pets until actually viewing the stables.
+	--- Prevents the pet UI from querying (and caching) stabled pets until actually viewing the stables.
 	-- @param Override  Forces a normal query even if the stables aren't open.
 	function GetStablePetInfo ( Slot, Override, ... )
-		if ( Override or IsAtStableMaster() ) then
+		if ( Override or Slot <= NUM_PET_ACTIVE_SLOTS or IsAtStableMaster() ) then
 			return Backup( Slot, Override, ... );
 		end
 	end
@@ -742,6 +757,11 @@ function NS.Frame:PLAYER_LOGIN ( Event )
 		if ( Options.Version == "3.0.9.2" ) then -- 3.1.0.1: Added options for finding already found and tamable mobs
 			Options.CacheWarnings = true;
 			Options.Version = "3.1.0.1";
+		end
+		if ( Options.Version < "5.0.0.3" ) then
+			-- 5.0.0.3: Made the achievement checkbox settings global
+			Options.Achievements = CopyTable( NS.OptionsDefault.Achievements );
+			Options.Version = "5.0.0.3";
 		end
 		Options.Version = NS.Version;
 	end
@@ -859,6 +879,16 @@ function NS.Frame:PLAYER_LOGIN ( Event )
 			OptionsCharacter.Achievements[ 7439 ] = true; -- Glorious!
 			Version = "5.0.0.1";
 		end
+		if ( Version < "5.0.0.2" ) then
+			-- 5.0.0.2: Made the achievement checkbox settings global
+			OptionsCharacter.Achievements = nil;
+			Version = "5.0.0.2";
+		end
+		if ( Version < "5.0.0.5" ) then
+			-- 5.0.0.5: Added Galleon.
+			AddDefault( 62346 ); -- Galleon
+			Version = "5.0.0.5";
+		end
 		OptionsCharacter.Version = NS.Version;
 	end
 
@@ -880,7 +910,7 @@ do
 		for NpcID, WorldID in pairs( NS.OptionsCharacter.NPCWorldIDs ) do
 			NPCActivate( NpcID, WorldID );
 		end
-		for AchievementID in pairs( NS.OptionsCharacter.Achievements ) do
+		for AchievementID in pairs( NS.Options.Achievements ) do
 			local Achievement = NS.Achievements[ AchievementID ];
 			if ( Achievement.WorldID ) then
 				AchievementActivate( Achievement );
@@ -904,7 +934,7 @@ function NS.Frame:PLAYER_LEAVING_WORLD ()
 	for NpcID in pairs( NS.OptionsCharacter.NPCWorldIDs ) do
 		NPCDeactivate( NpcID );
 	end
-	for AchievementID in pairs( NS.OptionsCharacter.Achievements ) do
+	for AchievementID in pairs( NS.Options.Achievements ) do
 		local Achievement = NS.Achievements[ AchievementID ];
 		if ( Achievement.WorldID ) then
 			AchievementDeactivate( Achievement );

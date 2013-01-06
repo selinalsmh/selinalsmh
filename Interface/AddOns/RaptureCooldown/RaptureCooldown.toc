@@ -1,0 +1,7 @@
+## Interface: 50100
+## Title: RaptureCooldown
+## Notes: RaptureCooldown by Ray
+## Author: Ray
+## Version: 1.0
+
+core.lua

@@ -3,6 +3,10 @@
 ## Version: 50001.22-Beta
 ## Title: Molinari
 ## Notes: One-click Milling, Prospecting, Disenchanting and Lockpicking!
+## X-Curse-Packaged-Version: 50001.22-Beta
+## X-Curse-Project-Name: Molinari
+## X-Curse-Project-ID: molinari
+## X-Curse-Repository-ID: wow/molinari/mainline
 
 Molinari.lua
 Disenchanting.lua

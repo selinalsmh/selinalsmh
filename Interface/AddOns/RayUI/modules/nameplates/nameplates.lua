@@ -181,16 +181,29 @@ local function CreateVirtualFrame(parent, point)
 	local noscalemult = R.mult * UIParent:GetScale()
 	parent.backdrop = CreateFrame("Frame", nil ,parent)
 	parent.backdrop:SetAllPoints()
-	parent.backdrop:SetBackdrop({
-		bgFile = R["media"].blank,
-		edgeFile = R["media"].glow,
-		edgeSize = 3*noscalemult,
-		insets = {
-			top = 3*noscalemult, left = 3*noscalemult, bottom = 3*noscalemult, right = 3*noscalemult
-		}
-	})
-	parent.backdrop:SetPoint("TOPLEFT", point, -3*noscalemult, 3*noscalemult)
-	parent.backdrop:SetPoint("BOTTOMRIGHT", point, 3*noscalemult, -3*noscalemult)
+	if R.global.general.theme == "Shadow" then
+		parent.backdrop:SetBackdrop({
+			bgFile = R["media"].blank,
+			edgeFile = R["media"].glow,
+			edgeSize = 3*noscalemult,
+			insets = {
+				top = 3*noscalemult, left = 3*noscalemult, bottom = 3*noscalemult, right = 3*noscalemult
+			}
+		})
+		parent.backdrop:SetPoint("TOPLEFT", point, -3*noscalemult, 3*noscalemult)
+		parent.backdrop:SetPoint("BOTTOMRIGHT", point, 3*noscalemult, -3*noscalemult)
+	else
+		parent.backdrop:SetBackdrop({
+			bgFile = R["media"].blank,
+			edgeFile = R["media"].blank,
+			edgeSize = noscalemult,
+			insets = {
+				top = noscalemult, left = noscalemult, bottom = noscalemult, right = noscalemult
+			}
+		})
+		parent.backdrop:SetPoint("TOPLEFT", point, -noscalemult, noscalemult)
+		parent.backdrop:SetPoint("BOTTOMRIGHT", point, noscalemult, -noscalemult)
+	end
 	parent.backdrop:SetBackdropColor(.05, .05, .05, .9)
 	parent.backdrop:SetBackdropBorderColor(0, 0, 0, 1)
 	if parent:GetFrameLevel() - 1 >0 then
@@ -219,22 +232,24 @@ end
 local function CreateAuraIcon(parent)
 	local noscalemult = R.mult * UIParent:GetScale()
 	local button = CreateFrame("Frame",nil,parent)
-	button:SetScript("OnHide", function(self) UpdateAuraAnchors(self:GetParent()) end)
+	button:SetScript("OnHide", function(self) UpdateAuraAnchors(self:GetParent():GetParent()) end)
 	button:SetWidth(20)
 	button:SetHeight(20)
 
-	button.shadow = CreateFrame("Frame", nil, button)
-	button.shadow:SetFrameLevel(0)
-	button.shadow:Point("TOPLEFT", -2*noscalemult, 2*noscalemult)
-	button.shadow:Point("BOTTOMRIGHT", 2*noscalemult, -2*noscalemult)
-	button.shadow:SetBackdrop( {
-		edgeFile = R["media"].glow,
-		bgFile = R["media"].blank,
-		edgeSize = R:Scale(4),
-		insets = {left = R:Scale(4), right = R:Scale(4), top = R:Scale(4), bottom = R:Scale(4)},
-	})
-	button.shadow:SetBackdropColor( 0, 0, 0 )
-	button.shadow:SetBackdropBorderColor( 0, 0, 0 )
+	if R.global.general.theme == "Shadow" then
+		button.shadow = CreateFrame("Frame", nil, button)
+		button.shadow:SetFrameLevel(0)
+		button.shadow:Point("TOPLEFT", -2*noscalemult, 2*noscalemult)
+		button.shadow:Point("BOTTOMRIGHT", 2*noscalemult, -2*noscalemult)
+		button.shadow:SetBackdrop( {
+			edgeFile = R["media"].glow,
+			bgFile = R["media"].blank,
+			edgeSize = R:Scale(4),
+			insets = {left = R:Scale(4), right = R:Scale(4), top = R:Scale(4), bottom = R:Scale(4)},
+		})
+		button.shadow:SetBackdropColor( 0, 0, 0 )
+		button.shadow:SetBackdropBorderColor( 0, 0, 0 )
+	end
 
 	button.bord = button:CreateTexture(nil, "BORDER")
 	button.bord:SetTexture(0, 0, 0, 1)
@@ -348,7 +363,7 @@ local function OnAura(frame, unit)
 		if DebuffWhiteList[name] then match = true end
 
 		if duration and match == true then
-			if not frame.icons[i] then frame.icons[i] = CreateAuraIcon(frame) end
+			if not frame.icons[i] then frame.icons[i] = CreateAuraIcon(frame.icons) end
 			local icon = frame.icons[i]
 			if i == 1 then icon:SetPoint("RIGHT",frame.icons,"RIGHT") end
 			if i ~= 1 and i <= 5 then icon:SetPoint("RIGHT", frame.icons[i-1], "LEFT", -2, 0) end
@@ -363,13 +378,19 @@ end
 --also resize it as nameplates somehow manage to resize some frames when they reappear after being hidden
 local function UpdateCastbar(frame)
 	frame:ClearAllPoints()
-	frame:SetSize(cbWidth, cbHeight)
-	frame:SetPoint("TOP", frame:GetParent().hp, "BOTTOM", 0, -8)
+	frame:SetPoint("TOPLEFT", frame:GetParent().hp, "BOTTOMLEFT", 0, -8)
+	frame:SetPoint("BOTTOMRIGHT", frame:GetParent().hp, "BOTTOMRIGHT", 0, -8-cbHeight)
 	frame:GetStatusBarTexture():SetHorizTile(true)
-	if(frame.shield:IsShown()) then
+	if(frame.oldshield:IsShown()) then
 		frame:SetStatusBarColor(1, 0, 0)
+		frame.shield:Show()
 	else
 		frame:SetStatusBarColor(0, 1, 0)
+		frame.shield:Hide()
+	end
+
+	if frame:GetEffectiveScale() < 1 then
+		frame:SetScale(1 / frame:GetEffectiveScale())
 	end
 end
 
@@ -417,31 +438,6 @@ end
 --Sometimes castbar likes to randomly resize
 local OnSizeChanged = function(self)
 	self.needFix = true
-end
-
---We need to reset everything when a nameplate it hidden, this is so theres no left over data when a nameplate gets reshown for a differant mob.
-local function OnHide(frame)
-	frame.hp:SetStatusBarColor(frame.hp.rcolor, frame.hp.gcolor, frame.hp.bcolor)
-    frame.hp:SetScale(1)
-    frame:SetScale(1)
-	frame.overlay:Hide()
-	frame.cb:Hide()
-	frame.unit = nil
-	frame.threatStatus = nil
-	frame.guid = nil
-	frame.hasClass = nil
-	frame.isFriendly = nil
-	frame.isTapped = nil
-	frame.hp.rcolor = nil
-	frame.hp.gcolor = nil
-	frame.hp.bcolor = nil
-	if frame.icons then
-		for _,icon in ipairs(frame.icons) do
-			icon:Hide()
-		end
-	end
-
-	frame:SetScript("OnUpdate",nil)
 end
 
 --Color Nameplate
@@ -504,7 +500,7 @@ end
 
 --HealthBar OnShow, use this to set variables for the nameplate, also size the healthbar here because it likes to lose it's
 --size settings when it gets reshown
-local function UpdateObjects(frame)
+local function OnFrameShow(frame)
 	local frame = frame:GetParent()
 
 	local r, g, b = frame.hp:GetStatusBarColor()
@@ -512,7 +508,7 @@ local function UpdateObjects(frame)
 	--Have to reposition this here so it doesnt resize after being hidden
 	frame.hp:ClearAllPoints()
 	frame.hp:SetSize(hpWidth, hpHeight)
-	frame.hp:SetPoint("TOP", frame, "TOP", 0, -15)
+	frame.hp:SetPoint("CENTER", frame, "CENTER", 0, 0)
 	frame.hp:GetStatusBarTexture():SetHorizTile(true)
 
 	frame.hp:SetMinMaxValues(frame.healthOriginal:GetMinMaxValues())
@@ -523,30 +519,113 @@ local function UpdateObjects(frame)
     Colorize(frame, r, g, b)
     frame.hp.rcolor, frame.hp.gcolor, frame.hp.bcolor = frame.hp:GetStatusBarColor()
 	frame.hp.hpbg:SetTexture(frame.hp.rcolor, frame.hp.gcolor, frame.hp.bcolor, 0.1)
+	frame.hp.name:SetJustifyH("LEFT")
 	frame.hp.name:SetTextColor(frame.hp.rcolor, frame.hp.gcolor, frame.hp.bcolor)
+	frame.hp.name:ClearAllPoints()
+	frame.hp.name:SetPoint("BOTTOMLEFT", frame.hp, "TOPLEFT", 0, -1)
+	frame.hp.name:SetPoint("BOTTOMRIGHT", frame.hp, "TOPRIGHT", -20, -1)
 
-	local level, elite, mylevel = tonumber(frame.hp.oldlevel:GetText()), frame.hp.elite:IsShown(), UnitLevel("player")
+	frame.hp.value:Show()
 
-	--Set the name text
-	if frame.hp.boss:IsShown() then
-		frame.hp.name:SetText(R:RGBToHex(0.8, 0.05, 0).." ??|r "..frame.hp.oldname:GetText())
-	else
-		frame.hp.name:SetText(R:RGBToHex(frame.hp.oldlevel:GetTextColor())..level..(elite and "+ |r" or "|r ")..frame.hp.oldname:GetText())
-	end
 	frame.overlay:ClearAllPoints()
 	frame.overlay:SetAllPoints(frame.hp)
 
-	if frame.icons then return end
-	frame.icons = CreateFrame("Frame",nil,frame)
-	frame.icons:SetPoint("BOTTOMRIGHT",frame.hp,"TOPRIGHT", 0, 3)
-	frame.icons:SetWidth(20 + hpWidth)
-	frame.icons:SetHeight(25)
-	frame.icons:SetFrameLevel(frame.hp:GetFrameLevel()+2)
-	frame:RegisterEvent("UNIT_AURA")
-	frame:HookScript("OnEvent", OnAura)
+	if not frame.icons then
+		frame.icons = CreateFrame("Frame", nil, frame)
+		frame.icons:SetPoint("BOTTOMRIGHT", frame.hp, "TOPRIGHT", 0, 6)
+		frame.icons:SetPoint("BOTTOMLEFT", frame.hp, "TOPLEFT", 0, 6)
+		frame.icons:SetHeight(25)
+		frame.icons:SetFrameLevel(frame.hp:GetFrameLevel()+2)
+		frame:RegisterEvent("UNIT_AURA")
+		frame:HookScript("OnEvent", OnAura)
+	end
+
+	local isSmallNP
+	if frame.hp:GetEffectiveScale() < 1 then
+		frame.hp:SetScale(1 / frame:GetEffectiveScale())
+		isSmallNP = true
+	end
+
+	if isSmallNP then
+		frame.hp:Width(hpWidth * .6)
+		frame.hp:Height(hpHeight * .8)
+		frame.hp.value:Hide()
+		frame.hp.name:SetJustifyH("CENTER")
+		frame.hp.name:ClearAllPoints()
+		frame.hp.name:SetPoint("BOTTOMLEFT", frame.hp, "TOPLEFT", 0, -1)
+		frame.hp.name:SetPoint("BOTTOMRIGHT", frame.hp, "TOPRIGHT", 0, -1)
+	end
+
+	local level, mylevel = tonumber(frame.hp.oldlevel:GetText()), UnitLevel("player")
+
+	--Set the name text
+	if frame.hp.boss:IsShown() then
+		frame.hp.name:SetText(R:RGBToHex(0.8, 0.05, 0).." B|r "..frame.hp.oldname:GetText())
+	elseif isSmallNP then
+		frame.hp.name:SetText(frame.hp.oldname:GetText())
+	elseif frame.hp.elite:IsVisible() then
+		if frame.hp.elite:GetTexture() == "Interface\\Tooltips\\EliteNameplateIcon"then
+			frame.hp.name:SetText(R:RGBToHex(frame.hp.oldlevel:GetTextColor())..level.."+ |r"..frame.hp.oldname:GetText())
+		else
+			frame.hp.name:SetText(R:RGBToHex(frame.hp.oldlevel:GetTextColor())..level.."R |r"..frame.hp.oldname:GetText())
+		end
+	else
+		frame.hp.name:SetText(R:RGBToHex(frame.hp.oldlevel:GetTextColor())..level.." |r"..frame.hp.oldname:GetText())
+	end
+
+	frame.icons:SetScale(frame.hp:GetScale())
 
     CheckFilter(frame)
 	HideObjects(frame)
+end
+
+local function OnFrameUpdate(self, e)
+	self.defaultAlpha = self:GetAlpha()
+
+	if self.defaultAlpha == 1 and UnitExists("target")  then
+		self.currentAlpha = 1
+	elseif UnitExists("target") then
+		self.currentAlpha = .3
+	else
+		self.currentAlpha = 1
+	end
+
+	self.lastAlpha = self.lastAlpha or 0
+	self.lastAlpha  = self.lastAlpha + (self.currentAlpha - self.lastAlpha)/30
+
+	if (self.lastAlpha == self.currentAlpha or math.abs(self.lastAlpha - self.currentAlpha) < .02) then
+		self:SetAlpha(self.currentAlpha)
+	else
+		self:SetAlpha(self.lastAlpha)
+	end
+end
+
+--We need to reset everything when a nameplate it hidden, this is so theres no left over data when a nameplate gets reshown for a differant mob.
+local function OnFrameHide(frame)
+	frame.hp:SetStatusBarColor(frame.hp.rcolor, frame.hp.gcolor, frame.hp.bcolor)
+    frame.hp:SetScale(1)
+    frame:SetScale(1)
+    frame.icons:SetScale(1)
+    frame.cb:SetScale(1)
+	frame.overlay:Hide()
+	frame.cb:Hide()
+	frame.unit = nil
+	frame.threatStatus = nil
+	frame.guid = nil
+	frame.hasClass = nil
+	frame.isFriendly = nil
+	frame.isTapped = nil
+	frame.hp.rcolor = nil
+	frame.hp.gcolor = nil
+	frame.hp.bcolor = nil
+	if frame.icons then
+		for _,icon in ipairs(frame.icons) do
+			icon:Hide()
+		end
+	end
+	frame:GetChildren().lastAlpha = 0
+	frame:GetChildren().fadingTo = nil
+	frame:SetScript("OnUpdate",nil)
 end
 
 --This is where we create most "Static" objects for the nameplate, it gets fired when a nameplate is first seen.
@@ -561,6 +640,9 @@ local function SkinObjects(frame, nameFrame)
 		--Health Bar
 		frame.healthOriginal = oldhp
 		frame.hp = CreateFrame("Statusbar", nil, frame)
+		if NP.db.smooth then
+			R:SmoothBar(frame.hp)
+		end
 		frame.hp:SetFrameLevel(oldhp:GetFrameLevel())
 		frame.hp:SetFrameStrata(oldhp:GetFrameStrata())
 		frame.hp:SetStatusBarTexture(R["media"].normal)
@@ -582,7 +664,7 @@ local function SkinObjects(frame, nameFrame)
 		frame.hp.value = frame.hp:CreateFontString(nil, "OVERLAY")
 		frame.hp.value:SetFont(R["media"].font, FONTSIZE, R["media"].fontflag)
 		frame.hp.value:SetShadowColor(0, 0, 0, 0.4)
-		frame.hp.value:SetPoint("BOTTOMRIGHT", frame.hp, "TOPRIGHT", 0, -4)
+		frame.hp.value:SetPoint("BOTTOMRIGHT", frame.hp, "TOPRIGHT", 0, -1)
 		frame.hp.value:SetJustifyH("RIGHT")
 		frame.hp.value:SetTextColor(1,1,1)
 		frame.hp.value:SetShadowOffset(R.mult, -R.mult)
@@ -591,8 +673,8 @@ local function SkinObjects(frame, nameFrame)
 	if not frame.hp.name then
 		--Create Name Text
 		frame.hp.name = frame.hp:CreateFontString(nil, "OVERLAY")
-		frame.hp.name:SetPoint("BOTTOMLEFT", frame.hp, "TOPLEFT", 0, -4)
-		frame.hp.name:SetPoint("BOTTOMRIGHT", frame.hp, "TOPRIGHT", -20, -4)
+		frame.hp.name:SetPoint("BOTTOMLEFT", frame.hp, "TOPLEFT", 0, -1)
+		frame.hp.name:SetPoint("BOTTOMRIGHT", frame.hp, "TOPRIGHT", -20, -1)
 		frame.hp.name:SetFont(R["media"].font, FONTSIZE, R["media"].fontflag)
 		frame.hp.name:SetJustifyH("LEFT")
 		frame.hp.name:SetShadowColor(0, 0, 0, 0.4)
@@ -600,7 +682,7 @@ local function SkinObjects(frame, nameFrame)
 		frame.hp.oldname = oldname
 	end
 
-	frame.hp:HookScript("OnShow", UpdateObjects)
+	frame.hp:HookScript("OnShow", OnFrameShow)
     frame.healthOriginal:HookScript("OnValueChanged", OnHealthValueChanged)
 
 	--Cast Bar
@@ -635,16 +717,29 @@ local function SkinObjects(frame, nameFrame)
 	if not cbicon.backdrop then
 		cbicon.backdrop = CreateFrame("Frame", nil ,cb)
 		cbicon.backdrop:SetAllPoints()
-		cbicon.backdrop:SetBackdrop({
-			bgFile = R["media"].blank,
-			edgeFile = R["media"].glow,
-			edgeSize = 3*noscalemult,
-			insets = {
-				top = 3*noscalemult, left = 3*noscalemult, bottom = 3*noscalemult, right = 3*noscalemult
-			}
-		})
-		cbicon.backdrop:SetPoint("TOPLEFT", cbicon, -3*noscalemult, 3*noscalemult)
-		cbicon.backdrop:SetPoint("BOTTOMRIGHT", cbicon, 3*noscalemult, -3*noscalemult)
+		if R.global.general.theme == "Shadow" then
+			cbicon.backdrop:SetBackdrop({
+				bgFile = R["media"].blank,
+				edgeFile = R["media"].glow,
+				edgeSize = 3*noscalemult,
+				insets = {
+					top = 3*noscalemult, left = 3*noscalemult, bottom = 3*noscalemult, right = 3*noscalemult
+				}
+			})
+			cbicon.backdrop:SetPoint("TOPLEFT", cbicon, -3*noscalemult, 3*noscalemult)
+			cbicon.backdrop:SetPoint("BOTTOMRIGHT", cbicon, 3*noscalemult, -3*noscalemult)
+		else
+			cbicon.backdrop:SetBackdrop({
+				bgFile = R["media"].blank,
+				edgeFile = R["media"].blank,
+				edgeSize = noscalemult,
+				insets = {
+					top = noscalemult, left = noscalemult, bottom = noscalemult, right = noscalemult
+				}
+			})
+			cbicon.backdrop:SetPoint("TOPLEFT", cbicon, -noscalemult, noscalemult)
+			cbicon.backdrop:SetPoint("BOTTOMRIGHT", cbicon, noscalemult, -noscalemult)
+		end
 		cbicon.backdrop:SetBackdropColor(.05, .05, .05, .9)
 		cbicon.backdrop:SetBackdropBorderColor(0, 0, 0, 1)
 		if cb:GetFrameLevel() - 1 >0 then
@@ -654,7 +749,22 @@ local function SkinObjects(frame, nameFrame)
 		end
 	end
 
-	cb.shield = cbshield
+	if not cb.shield then
+		cb.shield = cb:CreateTexture(nil, "ARTWORK")
+		cb.shield:SetTexture("Interface\\AddOns\\RayUI\\media\\shield")
+		cb.shield:SetTexCoord(0, .53125, 0, .6875)
+
+		cb.shield:SetSize(12, 17)
+		cb.shield:SetPoint("CENTER", cb, 0, -2)
+
+		cb.shield:SetBlendMode("BLEND")
+		cb.shield:SetDrawLayer("ARTWORK", 7)
+		cb.shield:SetVertexColor(1, .1, .1)
+		
+		cb.shield:Hide()
+	end
+
+	cb.oldshield = cbshield
 	cbshield:ClearAllPoints()
 	cbshield:SetPoint("TOP", cb, "BOTTOM")
 	cb:HookScript("OnShow", UpdateCastbar)
@@ -694,10 +804,13 @@ local function SkinObjects(frame, nameFrame)
 	QueueObject(frame, bossicon)
 	QueueObject(frame, elite)
 
-	UpdateObjects(frame.hp)
+	OnFrameShow(frame.hp)
 	UpdateCastbar(cb)
 
-	frame:HookScript("OnHide", OnHide)
+	frame:HookScript("OnHide", OnFrameHide)
+	if NP.db.fade then
+		frame:GetParent():HookScript("OnUpdate", OnFrameUpdate)
+	end
 	frames[frame:GetParent()] = true
 	frame.RayUIPlate = true
 end
@@ -712,12 +825,12 @@ local function UpdateThreat(frame, elapsed)
 		if g + b == 0 then
 			--Have Threat
 			if R.Role == "Tank" then
-				frame.hp:SetStatusBarColor(goodR, goodG, goodB)
-				frame.hp.hpbg:SetTexture(goodR, goodG, goodB, 0.1)
+				frame.hp.backdrop:SetBackdropBorderColor(0, 0, 0, 1)--(goodR, goodG, goodB, 0.1)
+				frame.hp.hpbg:SetTexture(goodR, goodG, goodB, 0.1)  --绿
 				--frame.hp.backdrop:SetBackdropBorderColor(0, 0, 0, 1)
 				frame.threatStatus = "GOOD"
 			else
-				frame.hp:SetStatusBarColor(badR, badG, badB)
+				frame.hp.backdrop:SetBackdropBorderColor(1, 0, 0,1)--(badR, badG, badB)有仇恨时的红色边框
 				frame.hp.hpbg:SetTexture(badR, badG, badB, 0.1)
 				--frame.hp.backdrop:SetBackdropBorderColor(badR, badG, badB, 1)
 				frame.threatStatus = "BAD"
@@ -727,26 +840,26 @@ local function UpdateThreat(frame, elapsed)
 			if R.Role == "Tank" then
 				if frame.threatStatus == "GOOD" then
 					--Losing Threat
-					frame.hp:SetStatusBarColor(transitionR2, transitionG2, transitionB2)
-					frame.hp.hpbg:SetTexture(transitionR2, transitionG2, transitionB2, 0.1)
+					frame.hp.backdrop:SetBackdropBorderColor(1, 1, 0, 1)--(transitionR2, transitionG2, transitionB2, 0.1)--橘黄
+					frame.hp.hpbg:SetTexture(1, 1, 0, 0.1)--(transitionR2, transitionG2, transitionB2, 0.1)--橘黄
 					--frame.hp.backdrop:SetBackdropBorderColor(badR, badG, badB, 1)
 				else
 					--Gaining Threat
-					frame.hp:SetStatusBarColor(transitionR, transitionG, transitionB)
-					frame.hp.hpbg:SetTexture(transitionR, transitionG, transitionB, 0.1)
+					frame.hp.backdrop:SetBackdropBorderColor(1, 1, 0, 1)--(transitionR, transitionG, transitionB)--深黄
+					frame.hp.hpbg:SetTexture(1, 1, 0, 0.1)--(transitionR, transitionG, transitionB, 0.1)
 					--frame.hp.backdrop:SetBackdropBorderColor(0, 0, 0, 1)
 				end
 			else
 				if frame.threatStatus == "GOOD" then
 					--Losing Threat
-					frame.hp:SetStatusBarColor(transitionR, transitionG, transitionB)
-					frame.hp.hpbg:SetTexture(transitionR, transitionG, transitionB, 0.1)
+					frame.hp.backdrop:SetBackdropBorderColor(1, 1, 0, 1)--(transitionR, transitionG, transitionB, 0.1) --深黄
+					frame.hp.hpbg:SetTexture(1, 1, 0, 0.1)--(transitionR, transitionG, transitionB, 0.1)
 					--frame.hp.backdrop:SetBackdropBorderColor(0, 0, 0, 1)
 				else
 					--Gaining Threat
-					frame.hp:SetStatusBarColor(transitionR2, transitionG2, transitionB2)
-					frame.hp.hpbg:SetTexture(transitionR2, transitionG2, transitionB2, 0.1)
-					--frame.hp.backdrop:SetBackdropBorderColor(badR, badG, badB, 1)
+					frame.hp.backdrop:SetBackdropBorderColor(1, 1, 0, 1)--(transitionR2, transitionG2, transitionB2)	--橘黄
+					frame.hp.hpbg:SetTexture(1, 1, 0, 0.1)--(transitionR2, transitionG2, transitionB2, 0.1)	
+					--frame.hp.backdrop:SetBackdropBorderColor(badR, badG, badB, 1)1)
 				end
 			end
 		end
@@ -754,21 +867,21 @@ local function UpdateThreat(frame, elapsed)
 		if InCombatLockdown() and frame.isFriendly ~= true then
 			--No Threat
 			if R.Role == "Tank" then
-				frame.hp:SetStatusBarColor(badR, badG, badB)
-				frame.hp.hpbg:SetTexture(badR, badG, badB, 0.1)
+				frame.hp.backdrop:SetBackdropBorderColor(1, 0, 0,1)--(badR, badG, badB)  --红
+				frame.hp.hpbg:SetTexture(badR, badG, badB, 0.1) --红
 				--frame.hp.backdrop:SetBackdropBorderColor(badR, badG, badB, 1)
 				frame.threatStatus = "BAD"
 			else
-				frame.hp:SetStatusBarColor(goodR, goodG, goodB)
+				frame.hp.backdrop:SetBackdropBorderColor(0, 0, 0, 1)--(goodR, goodG, goodB, 0.1)
 				frame.hp.hpbg:SetTexture(goodR, goodG, goodB, 0.1)
 				--frame.hp.backdrop:SetBackdropBorderColor(0, 0, 0, 1)
 				frame.threatStatus = "GOOD"
 			end
 		else
 			--Set colors to their original, not in combat
-			frame.hp:SetStatusBarColor(frame.hp.rcolor, frame.hp.gcolor, frame.hp.bcolor)
+			--frame.hp:SetStatusBarColor(frame.hp.rcolor, frame.hp.gcolor, frame.hp.bcolor)
 			frame.hp.hpbg:SetTexture(frame.hp.rcolor, frame.hp.gcolor, frame.hp.bcolor, 0.1)
-			--frame.hp.backdrop:SetBackdropBorderColor(0, 0, 0, 1)
+			frame.hp.backdrop:SetBackdropBorderColor(0, 0, 0, 1)
 			frame.threatStatus = nil
 		end
 	end
@@ -823,14 +936,8 @@ local function ShowHealth(frame, ...)
 			frame.hp.backdrop:SetBackdropBorderColor(0, 0, 0, 1)
 		end
 	elseif (frame.hasClass ~= true and frame.isFriendly ~= true) then
-		frame.hp.backdrop:SetBackdropBorderColor(0, 0, 0, 1)
+		--frame.hp.backdrop:SetBackdropBorderColor(0, 0, 0, 1)
 	end
-
-	if frame.hp:GetEffectiveScale() < 1 then
-        frame.hp:SetScale(1 / frame.hp:GetParent():GetEffectiveScale())
-        --frame:SetScale(1)
-	end
-    --frame:SetScale(frame.hp:GetScale())
 end
 
 --Scan all visible nameplate for a known unit.
@@ -846,15 +953,6 @@ local function CheckUnit_Guid(frame, ...)
 		OnAura(frame, "mouseover")
 	else
 		frame.unit = nil
-	end
-end
-
---Update settings for nameplate to match config
-local function CheckSettings(frame, ...)
-	--Width
-	if frame.hp:GetWidth() ~= 110 then
-		frame.hp:Width(110)
-		hpWidth = 110
 	end
 end
 
@@ -882,7 +980,6 @@ local function ForEachPlate(functionToRun, ...)
 end
 
 --Check if the frames default overlay texture matches blizzards nameplates default overlay texture
-local select = select
 local function HookFrames(...)
 	for index = 1, select("#", ...) do
 		local frame = select(index, ...)
@@ -958,7 +1055,6 @@ function NP:Initialize()
 		ForEachPlate(ShowHealth)
 		ForEachPlate(HideDrunkenText)
 		ForEachPlate(CheckUnit_Guid)
-		ForEachPlate(CheckSettings)
 		ForEachPlate(UpdateColoring)
 
 		if(self.elapsed and self.elapsed > 0.2) then

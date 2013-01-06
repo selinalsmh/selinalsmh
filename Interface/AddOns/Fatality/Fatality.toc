@@ -1,10 +1,10 @@
-﻿## Interface: 50001
+﻿## Interface: 50100
 ## Title: Fatality
 ## Notes: Announces player deaths to chat. Type |cff00d4ed/fatality|r for options.
 ## SavedVariables: FatalityStatusDB
 ## SavedVariablesPerCharacter: FatalityDB
 ## Author: Moop
-## Version: 2.2b
+## Version: 2.3
 
 Locales\enUS.lua
 Locales\deDE.lua

@@ -1,0 +1,12 @@
+tag 50001.22-Beta
+0cff4d8db2c0542026b44d32f8f1aa3a8a8dd3ae
+Adrian L Lange <adrianlund@gmail.com>
+2012-08-30 13:42:39 +0200
+
+50001.22-Beta
+
+
+--------------------
+
+Adrian L Lange:
+	- Use double underscore to avoid tainting blizzard

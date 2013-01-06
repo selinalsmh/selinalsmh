@@ -52,6 +52,11 @@ function UF:GetOptions()
 					name = L["显示竞技场头像"],
 					type = "toggle",
 				},
+				showPortrait = {
+					order = 3,
+					name = L["启用头像覆盖血条"],
+					type = "toggle",
+				},
 			},
 		},
 		others = {
@@ -76,6 +81,14 @@ function UF:GetOptions()
 		},
 	}
 	return options
+end
+
+function UF:PLAYER_LOGIN(event)
+	if IsAddOnLoaded("Gnosis") or IsAddOnLoaded("AzCastBar") or IsAddOnLoaded("Quartz") then
+		for _, frame in pairs(oUF.objects) do
+			frame:DisableElement("Castbar")
+		end
+	end
 end
 
 function UF:Initialize()
@@ -126,12 +139,8 @@ function UF:Initialize()
 
 	}, {__index = RayUF["colors"]})
 
-	for layout, spawnFunc in pairs(UF.Layouts) do
-		if spawnFunc then
-			spawnFunc(self)
-		end
-	end
-	wipe(UF.Layouts)
+    self:LoadUnitFrames()
+	self:RegisterEvent("PLAYER_LOGIN")
 end
 
 function UF:Info()

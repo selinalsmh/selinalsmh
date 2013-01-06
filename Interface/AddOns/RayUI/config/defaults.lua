@@ -19,8 +19,9 @@ G["media"]={
 }
 
 G["general"]={
-	uiscale = 0.75,
-	logo = true,
+	uiscale = 0.72,
+	logo = false,
+	theme = "Shadow",
 }
 
 P["WorldMap"]={
@@ -40,6 +41,8 @@ P["NamePlates"]={
 	showdebuff = true,
 	combat = false,
 	showhealer = true,
+	smooth = true,
+	fade = true,
 }
 
 P["Bag"]={
@@ -82,6 +85,7 @@ P["UnitFrames"]={
 	powerheight = 0.13,
 	showBossFrames = true,
 	showArenaFrames = true,
+	showPortrait = true,
 	separateEnergy = false,
 	vengeance = true,
 	aurabar = false,
@@ -107,7 +111,7 @@ P["Raid"]={
     healbar = true,
     healoverflow = true,
     healothersonly = false,
-    roleicon = true,    
+    roleicon = true,
     indicatorsize = 7,
     symbolsize = 11,
     leadersize = 12,
@@ -136,7 +140,7 @@ P["ActionBar"]={
     bar1 = {
         enable = true,
         mouseover = false,
-        autohide = true,
+        autohide = false,
         buttonsPerRow = 12,
         buttonsize = 28,
         buttonspacing = 6,
@@ -145,7 +149,7 @@ P["ActionBar"]={
     bar2 = {
         enable = true,
         mouseover = false,
-        autohide = true,
+        autohide = false,
         buttonsPerRow = 12,
         buttonsize = 28,
         buttonspacing = 6,
@@ -154,7 +158,7 @@ P["ActionBar"]={
     bar3 = {
         enable = true,
         mouseover = false,
-        autohide = true,
+        autohide = false,
         buttonsPerRow = 6,
         buttonsize = 28,
         buttonspacing = 6,
@@ -201,7 +205,7 @@ G["Misc"] = {}
 P["Misc"]={
 	anounce = true,
 	auction = true,
-	autodez = true,
+	autodez = false,
 	autorelease = true,
 	merchant = true,
 		poisons = true,
@@ -240,4 +244,16 @@ P["Bags"]={
 	sortInverted = true,
 	bagWidth = 385,
 	bankWidth = 600,
+}
+
+P["CooldownFlash"]={
+	enable = true,
+	fadeInTime = 0.1,
+	fadeOutTime = 0.2,
+	maxAlpha = 0.8,
+	animScale = 1.2,
+	iconSize = 80,
+	holdTime = 0.3,
+	enablePet = false,
+	showSpellName = false,
 }
